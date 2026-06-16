@@ -1,0 +1,4 @@
+*.csv
+.env
+.env.local
+.env.prod
