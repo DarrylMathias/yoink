@@ -8,6 +8,12 @@ import (
 )
 
 type Env struct{
+	DBHost string `mapstructure:"HOST"`
+	Port string `mapstructure:"PORT"`
+	DBPort string `mapstructure:"DB_PORT"`
+	DBUser string `mapstructure:"DB_USER"`
+	DBPassword string `mapstructure:"DB_PASSWORD"`
+	DBName string `mapstructure:"DB_NAME"`
 	AwsAccessKeyId string `mapstructure:"AWS_ACCESS_KEY_ID"`
 	AwsSecretAccessKey string `mapstructure:"AWS_SECRET_ACCESS_KEY"`
 }

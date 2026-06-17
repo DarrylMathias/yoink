@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"yoink/utils/database"
 	"yoink/utils/env"
 	"yoink/utils/myaws"
 	mysqs "yoink/utils/myaws/sqs"
@@ -18,4 +19,8 @@ func App(){
 		panic(fmt.Errorf("error in aws config --- %s", err.Error()))
 	}
 	mysqs.GetSQSClient()
+	mysqs.GetQueueURL()
+
+	database.NewDatabase(env.EnvValue)
+	
 }

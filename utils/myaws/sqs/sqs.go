@@ -16,6 +16,23 @@ func GetSQSClient(){
 	SqsClient = sqsClient
 }
 
+func ReceiveMessage() (*sqs.ReceiveMessageOutput, error){
+	config := &sqs.ReceiveMessageInput{
+		QueueUrl: SQSQueueURL,
+	}
+	message, err := SqsClient.ReceiveMessage(context.Background(), config)
+	return message, err
+}
+
+func SendMessage(data string) (*sqs.SendMessageOutput, error){
+	config := &sqs.SendMessageInput{
+		MessageBody: aws.String(data),
+		QueueUrl: SQSQueueURL,
+	}
+	output, err := SqsClient.SendMessage(context.Background(), config)
+	return output, err
+}
+
 func GetQueueURL() error{
 	config := &sqs.GetQueueUrlInput{	
 		QueueName: aws.String("yoink_sqs"),
@@ -27,3 +44,4 @@ func GetQueueURL() error{
 	SQSQueueURL = queue.QueueUrl
 	return nil
 }
+

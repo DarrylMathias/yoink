@@ -2,11 +2,18 @@ package main
 
 import (
 	"yoink/app"
-	"yoink/seed"
+	// "yoink/crawler/extract/hashtable"
+	"yoink/crawler/extract"
 )
-
 
 func main() {
 	app.App()
-	seed.SeedSQS()
+	err := extract.ExtractURLData()
+	if err != nil {
+		panic(err)
+	}
+	// _, err := hashtable.AlreadySeen("abd")
+	// if err != nil {
+	// 	panic(err)
+	// }
 }
