@@ -6,6 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 )
 
 var SqsClient *sqs.Client
@@ -31,6 +32,15 @@ func SendMessage(data string) (*sqs.SendMessageOutput, error){
 	}
 	output, err := SqsClient.SendMessage(context.Background(), config)
 	return output, err
+}
+
+func DeleteMessage(input types.Message) error{
+	config := &sqs.DeleteMessageInput{
+		QueueUrl: SQSQueueURL,
+		ReceiptHandle: input.ReceiptHandle,
+	}
+	_, err := SqsClient.DeleteMessage(context.Background(), config)
+	return err
 }
 
 func GetQueueURL() error{

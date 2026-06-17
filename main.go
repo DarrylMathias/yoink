@@ -1,19 +1,18 @@
 package main
 
 import (
+	"fmt"
+	"time"
 	"yoink/app"
-	// "yoink/crawler/extract/hashtable"
-	"yoink/crawler/extract"
+	"yoink/crawler"
 )
 
 func main() {
+	t1 := time.Now().UnixMilli()
 	app.App()
-	err := extract.ExtractURLData()
-	if err != nil {
+	if err := crawler.Crawl(); err != nil{
 		panic(err)
 	}
-	// _, err := hashtable.AlreadySeen("abd")
-	// if err != nil {
-	// 	panic(err)
-	// }
+	t2 := time.Now().UnixMilli()
+	fmt.Println("round trip time (ms)", t2-t1)
 }
