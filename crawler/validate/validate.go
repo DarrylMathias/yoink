@@ -23,7 +23,7 @@ func NormalizeURLData(messages *sqs.ReceiveMessageOutput) ([]models.MyURL, error
 		fmt.Printf("Validating %s\n", url)
 
 		// hashurl
-		hashedURL, err := utils.HashURL(url)
+		hashedURL, err := utils.HashURL(nURL)
 		if err != nil{
 			return normalizedURLs, err
 		}

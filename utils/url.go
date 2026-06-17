@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"math/rand/v2"
 	"net/http"
 	"net/url"
 	"path"
@@ -144,7 +145,7 @@ func NormalizeURL(rawURL string) (string, error) {
 	return u.String(), nil
 }
 
-func FilteredURLs(domain string, links []string) []string{
+func FilteredURLs(domain string, links []string, MAX_LINKS_PER_PAGE int) []string{
 	var filteredLinks []string
 	seen := make(map[string]struct{})
 
@@ -188,6 +189,14 @@ func FilteredURLs(domain string, links []string) []string{
 
 		filteredLinks = append(filteredLinks, normalizedURL)
 		// fmt.Println(normalizedURL)
+	}
+	// randomise
+	rand.Shuffle(len(filteredLinks), func(i, j int) {
+		filteredLinks[i], filteredLinks[j] = filteredLinks[j], filteredLinks[i]
+	})
+
+	if len(filteredLinks) > MAX_LINKS_PER_PAGE {
+		filteredLinks = filteredLinks[:MAX_LINKS_PER_PAGE]
 	}
 	return filteredLinks
 }
