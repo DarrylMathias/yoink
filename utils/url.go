@@ -4,12 +4,14 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"math/rand/v2"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
 	"time"
+	"yoink/utils/redis"
 
 	"github.com/benjaminestes/robots"
 	"github.com/temoto/robotstxt"
@@ -33,24 +35,58 @@ func MyGet(url string) (*http.Response, error){
 	return res, nil
 }
 
-func IsCrawlable(url string) bool{
+func GetDomain(normalizedURL string) (string, error) {
+	u, err := url.Parse(normalizedURL)
+	if err != nil {
+		return "", err
+	}
+	return u.Host, nil
+}
+
+func IsCrawlable(url string) bool {
 	robotsURL, err := robots.Locate(url)
-	if err != nil{
+	if err != nil {
 		return true
 	}
-	
-	res, err := MyGet(robotsURL)
-	if err != nil{
+	host, err := GetDomain(robotsURL)
+	if err != nil {
 		return true
 	}
-	defer res.Body.Close()
-	
-	data, err := robotstxt.FromResponse(res)
-	if err != nil{
-		return true
+
+	// try redis
+	cachedRobots, err := redis.GetCache(host)
+	var data *robotstxt.RobotsData
+
+	// cache hit
+	if err == nil {
+		data, err = robotstxt.FromString(cachedRobots)
+		if err != nil {
+			return true
+		}
+	} else {
+		// cache miss
+		fmt.Printf("%s is not cached in redis\n", host)
+
+		res, err := MyGet(robotsURL)
+		if err != nil {
+			return true
+		}
+		defer res.Body.Close()
+
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			return true
+		}
+		robotsText := string(body)
+
+		data, err = robotstxt.FromString(robotsText)
+		if err != nil {
+			return true
+		}
+
+		_ = redis.SetCache(host, robotsText)
 	}
 	grp := data.FindGroup("yoinkbot")
-
 	return grp.Test(url)
 }
 

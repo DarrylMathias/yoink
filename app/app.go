@@ -7,6 +7,7 @@ import (
 	"yoink/utils/env"
 	"yoink/utils/myaws"
 	mysqs "yoink/utils/myaws/sqs"
+	"yoink/utils/redis"
 )
 
 func App(){
@@ -22,5 +23,9 @@ func App(){
 	mysqs.GetQueueURL()
 
 	database.NewDatabase(env.EnvValue)
+	err = redis.NewClient()
+	if err != nil{
+		panic(fmt.Errorf("error in redis config --- %s", err.Error()))
+	}
 	
 }

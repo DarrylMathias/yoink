@@ -16,6 +16,10 @@ type Env struct{
 	DBName string `mapstructure:"DB_NAME"`
 	AwsAccessKeyId string `mapstructure:"AWS_ACCESS_KEY_ID"`
 	AwsSecretAccessKey string `mapstructure:"AWS_SECRET_ACCESS_KEY"`
+	RedisAddress string `mapstructure:"REDIS_ADDRESS"`
+	RedisUsername string `mapstructure:"REDIS_USERNAME"`
+	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
+	RedisDatabase string `mapstructure:"REDIS_DATABASE"`
 }
 
 var EnvValue *Env
