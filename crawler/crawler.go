@@ -35,11 +35,11 @@ func Crawl() error {
 	}
 
 	// delete sqs message
-	// for _, msg := range messages.Messages{
-	// 	if err := mysqs.DeleteMessage(msg); err != nil{
-	// 		return err
-	// 	}
-	// }
+	for _, msg := range messages.Messages{
+		if err := mysqs.DeleteMessage(msg); err != nil{
+			return err
+		}
+	}
 
 	return nil
 }

@@ -3,7 +3,9 @@ package store
 import (
 	"fmt"
 	"yoink/models"
+	"yoink/utils/database"
 	"yoink/utils/myaws/s3"
+
 	"github.com/dustin/go-humanize"
 )
 
@@ -18,10 +20,14 @@ func Store(pages []models.Page, data [][]byte) error{
 	}
 
 	// store in RDS
-	// for i, page := range pages{
-	// 	s3.UploadFile(page.Html_s3_key, data[i])
-	// 	fmt.Println("Uploaded html of url", page.Url)
-	// }
+	for _, page := range pages{
+		db := database.DB
+		err := db.Create(page).Error
+		if err != nil{
+			return err
+		}
+		fmt.Println("Metadata stored in RDS successfully")
+	}
 
 	return nil
 }
