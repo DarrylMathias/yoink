@@ -36,19 +36,31 @@ func SendMessage(data string) (*sqs.SendMessageOutput, error){
 	return output, err
 }
 
-func SendBatchMessage(data []string) (*sqs.SendMessageBatchOutput, error){
-	var urls []types.SendMessageBatchRequestEntry
-	for i, url := range data{
-		urls = append(urls, types.SendMessageBatchRequestEntry{
-			Id: aws.String(strconv.Itoa(i)),
-			MessageBody: aws.String(url),
-		})
+func SendBatchMessage(data []string) (error){
+	// chunking since aws allows only 10 msgs per batch
+	for i:=0; i<len(data); i+=10{
+		end := i + 10
+		if end > len(data) {
+			end = len(data)
+		}
+
+		var urls []types.SendMessageBatchRequestEntry
+		for j, url := range data[i:end] {
+			urls = append(urls, types.SendMessageBatchRequestEntry{
+				Id: aws.String(strconv.Itoa(j)),
+				MessageBody: aws.String(url),
+			})
+		}
+		config := &sqs.SendMessageBatchInput{
+			QueueUrl: SQSQueueURL,
+			Entries: urls,
+		}
+		_, err := SqsClient.SendMessageBatch(context.Background(), config)
+		if err != nil{
+			return err
+		}
 	}
-	config := &sqs.SendMessageBatchInput{
-		QueueUrl: SQSQueueURL,
-		Entries: urls,
-	}
-	return SqsClient.SendMessageBatch(context.Background(), config)
+	return nil
 }
 
 func DeleteMessage(input types.Message) error{

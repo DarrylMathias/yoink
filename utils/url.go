@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand/v2"
@@ -18,7 +19,13 @@ import (
 )
 
 var HTTPClient = &http.Client{
-	Timeout: 10*time.Second,
+    Timeout: 5 * time.Second,
+    CheckRedirect: func(req *http.Request, via []*http.Request) error {
+        if len(via) >= 10 {
+            return errors.New("too many redirects")
+        }
+        return nil
+    },
 }
 
 func MyGet(url string) (*http.Response, error){
@@ -140,6 +147,10 @@ func NormalizeURL(rawURL string) (string, error) {
 
 	// clean path
 	u.Path = path.Clean(u.Path)
+	
+	if u.Path != "/" {
+		u.Path = strings.TrimSuffix(u.Path, "/")
+	}
 
 	// normalize root paths
 	if u.Path == "/" ||

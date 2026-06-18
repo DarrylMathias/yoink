@@ -53,7 +53,7 @@ func ExtractPage(urls []models.MyURL) (pgs []models.Page, data [][]byte, err err
 		fmt.Println("Filtered links", filteredLinks)
 
 		// push urls to sqs
-		_, err = mysqs.SendBatchMessage(filteredLinks)
+		err = mysqs.SendBatchMessage(filteredLinks)
 		if err != nil{
 			return nil, nil, err
 		}
@@ -69,7 +69,7 @@ func ExtractPage(urls []models.MyURL) (pgs []models.Page, data [][]byte, err err
 			Url_hash: myUrl.Hash,
 			Title: title,
 			Description: desc,
-			Crawl_time: time.Duration(crawlTime),
+			Crawl_time: crawlTime,
 			Html_s3_key: myUrl.Hash,
 		})
 		data = append(data, byteData)

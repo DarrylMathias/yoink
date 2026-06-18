@@ -15,7 +15,11 @@ func FilterByHash(links []string) ([]string, error){
 		}
 
 		// check duplicacy
-		if(hashtable.AlreadySeen(hashedURL)){
+		seen, err := hashtable.AlreadySeen(hashedURL)
+		if err != nil{
+			return nil, err
+		}
+		if(seen){
 			continue
 		}
 		filteredLinks = append(filteredLinks, link)

@@ -7,6 +7,7 @@ import (
 	"yoink/utils/myaws/s3"
 
 	"github.com/dustin/go-humanize"
+	"gorm.io/gorm/clause"
 )
 
 func Store(pages []models.Page, data [][]byte) error{
@@ -22,7 +23,11 @@ func Store(pages []models.Page, data [][]byte) error{
 	// store in RDS
 	for _, page := range pages{
 		db := database.DB
-		err := db.Create(page).Error
+		err := db.Clauses(
+			clause.OnConflict{
+				DoNothing: true,
+			},
+		).Create(page).Error
 		if err != nil{
 			return err
 		}

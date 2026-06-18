@@ -6,6 +6,7 @@ import (
 	"yoink/utils/database"
 	"yoink/utils/env"
 	"yoink/utils/myaws"
+	"yoink/utils/myaws/s3"
 	mysqs "yoink/utils/myaws/sqs"
 	"yoink/utils/redis"
 )
@@ -21,6 +22,7 @@ func App(){
 	}
 	mysqs.GetSQSClient()
 	mysqs.GetQueueURL()
+	s3.GetS3Client()
 
 	database.NewDatabase(env.EnvValue)
 	err = redis.NewClient()

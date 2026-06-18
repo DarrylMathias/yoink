@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func AlreadySeen(hashedURL string) bool{
+func AlreadySeen(hashedURL string) (bool, error){
 	page := new(models.Page)
 
 	db := database.DB
@@ -15,10 +15,10 @@ func AlreadySeen(hashedURL string) bool{
 
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return false
+			return false, nil
 		}
-		return false
+		return false, err
 	}
 
-	return true
+	return true, nil
 }

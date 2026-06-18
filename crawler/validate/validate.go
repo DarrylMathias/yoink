@@ -29,7 +29,11 @@ func NormalizeURLData(messages *sqs.ReceiveMessageOutput) ([]models.MyURL, error
 		}
 
 		// check duplicacy
-		if(hashtable.AlreadySeen(hashedURL)){
+		seen, err := hashtable.AlreadySeen(hashedURL)
+		if err != nil{
+			return normalizedURLs, err
+		}
+		if(seen){
 			fmt.Println("URL already crawled")
 			continue
 		}

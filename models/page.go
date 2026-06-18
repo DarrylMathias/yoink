@@ -1,8 +1,6 @@
 package models
 
 import (
-	"time"
-
 	"github.com/google/uuid"
 )
 
@@ -12,6 +10,6 @@ type Page struct{
 	Url_hash string `json:"url_hash" gorm:"unique, not null"`
 	Title string `json:"title" gorm:"not null"`
 	Description string `json:"description"`
-	Crawl_time time.Duration `json:"crawl_time"`
+	Crawl_time int64 `json:"crawl_time"`
 	Html_s3_key string `json:"html_s3_key" gorm:"not null"`
 }
