@@ -11,7 +11,6 @@ import (
 )
 
 var S3Client *s3.Client
-var BucketName string = env.EnvValue.S3BucketName
 
 func GetS3Client(){
 	s3Client := s3.NewFromConfig(*myaws.AwsConfig)
@@ -20,8 +19,9 @@ func GetS3Client(){
 
 // UploadFile reads from a file and puts the data into an object in a bucket.
 func UploadFile(key string, body []byte) (int64, error) {
+	var bucketName string = env.EnvValue.S3BucketName
 	config := &s3.PutObjectInput{
-		Bucket: aws.String(BucketName),
+		Bucket: aws.String(bucketName),
 		Key: aws.String(key),
 		Body: bytes.NewReader(body),
 	}
