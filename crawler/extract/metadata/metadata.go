@@ -27,6 +27,10 @@ func ExtractDescription(data []byte) (string, error) {
 	}
 
 	description := doc.Find("meta[name='description']").AttrOr("content", "")
+
+	if description == "" {
+		description = doc.Find("meta[property='og:description']").AttrOr("content", "")
+	}
 	return description, nil
 }
 

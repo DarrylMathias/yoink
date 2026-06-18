@@ -11,7 +11,7 @@ var AwsConfig *aws.Config
 
 func GetConfig() error{
 	if AwsConfig == nil{
-		awsConfig, err := config.LoadDefaultConfig(context.Background(), config.WithRegion("ap-southeast-2"))
+		awsConfig, err := config.LoadDefaultConfig(context.Background(), config.WithRegion("ap-south-1"))
 		if err != nil{
 			return err
 		}

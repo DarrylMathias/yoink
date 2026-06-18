@@ -22,12 +22,12 @@ func UploadFile(key string, body []byte) (int64, error) {
 	var bucketName string = env.EnvValue.S3BucketName
 	config := &s3.PutObjectInput{
 		Bucket: aws.String(bucketName),
-		Key: aws.String(key),
+		Key: aws.String(key + ".html"),
 		Body: bytes.NewReader(body),
 	}
-	output, err := S3Client.PutObject(context.Background(), config)
+	_, err := S3Client.PutObject(context.Background(), config)
 	if err != nil{
 		return 0, err
 	}
-	return (*output.Size), nil
+	return int64(len(body)), nil
 }

@@ -20,8 +20,11 @@ func App(){
 	if err != nil {
 		panic(fmt.Errorf("error in aws config --- %s", err.Error()))
 	}
+
 	mysqs.GetSQSClient()
-	mysqs.GetQueueURL()
+	if err = mysqs.GetQueueURL(); err != nil{
+		panic(fmt.Errorf("error in fetching queue url --- %s", err.Error()))
+	}
 	s3.GetS3Client()
 
 	database.NewDatabase(env.EnvValue)

@@ -8,7 +8,7 @@ import (
 )
 
 func SeedSQS(){
-	seed_urls := []string{"https://en.wikipedia.org", "https://reddit.com", "https://news.ycombinator.com","https://golang.org"}
+	seed_urls := []string{"https://en.wikipedia.org", "https://reddit.com", "https://news.ycombinator.com","https://golang.org", "https://darrylmathias.tech"}
 	mysqs.GetQueueURL()
 
 	for i, url := range seed_urls{
