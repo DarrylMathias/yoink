@@ -2,6 +2,8 @@ package mysqs
 
 import (
 	"context"
+	"strconv"
+	"yoink/utils/env"
 	"yoink/utils/myaws"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,6 +36,21 @@ func SendMessage(data string) (*sqs.SendMessageOutput, error){
 	return output, err
 }
 
+func SendBatchMessage(data []string) (*sqs.SendMessageBatchOutput, error){
+	var urls []types.SendMessageBatchRequestEntry
+	for i, url := range data{
+		urls = append(urls, types.SendMessageBatchRequestEntry{
+			Id: aws.String(strconv.Itoa(i)),
+			MessageBody: aws.String(url),
+		})
+	}
+	config := &sqs.SendMessageBatchInput{
+		QueueUrl: SQSQueueURL,
+		Entries: urls,
+	}
+	return SqsClient.SendMessageBatch(context.Background(), config)
+}
+
 func DeleteMessage(input types.Message) error{
 	config := &sqs.DeleteMessageInput{
 		QueueUrl: SQSQueueURL,
@@ -45,7 +62,7 @@ func DeleteMessage(input types.Message) error{
 
 func GetQueueURL() error{
 	config := &sqs.GetQueueUrlInput{	
-		QueueName: aws.String("yoink_sqs"),
+		QueueName: aws.String(env.EnvValue.SqsName),
 	}
 	queue, err := SqsClient.GetQueueUrl(context.Background(), config)
 	if err != nil{

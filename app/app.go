@@ -11,7 +11,7 @@ import (
 )
 
 func App(){
-	err := env.NewEnv(".env.local")
+	err := env.NewEnv(".env.prod")
 	if err != nil {
 		panic(fmt.Errorf("error in parsing env --- %s", err.Error()))
 	}

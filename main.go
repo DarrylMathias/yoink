@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 	"yoink/app"
-	"yoink/utils"
 	// "yoink/crawler"
 )
 
@@ -14,7 +13,6 @@ func main() {
 	// if err := crawler.Crawl(); err != nil{
 	// 	panic(err)
 	// }
-	utils.IsCrawlable("https://darrylmathias.tech")
 	t2 := time.Now().UnixMilli()
 	fmt.Println("round trip time (ms)", t2-t1)
 }

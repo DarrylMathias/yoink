@@ -14,12 +14,16 @@ type Env struct{
 	DBUser string `mapstructure:"DB_USER"`
 	DBPassword string `mapstructure:"DB_PASSWORD"`
 	DBName string `mapstructure:"DB_NAME"`
+	DBSSLRootCert string `mapstructure:"DB_SSL_ROOT_CERT"`
 	AwsAccessKeyId string `mapstructure:"AWS_ACCESS_KEY_ID"`
 	AwsSecretAccessKey string `mapstructure:"AWS_SECRET_ACCESS_KEY"`
+	SqsName string `mapstructure:"SQS_NAME"`
+	S3BucketName string `mapstructure:"S3_BUCKET_NAME"`
 	RedisAddress string `mapstructure:"REDIS_ADDRESS"`
 	RedisUsername string `mapstructure:"REDIS_USERNAME"`
 	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
 	RedisDatabase string `mapstructure:"REDIS_DATABASE"`
+	Application string `mapstructure:"APPLICATION"`
 }
 
 var EnvValue *Env

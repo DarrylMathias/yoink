@@ -2,39 +2,43 @@ package extract
 
 import (
 	"fmt"
+	"time"
 	"yoink/crawler/extract/dedup"
 	"yoink/crawler/extract/download"
 	"yoink/crawler/extract/metadata"
 	"yoink/models"
 	"yoink/utils"
 	mysqs "yoink/utils/myaws/sqs"
+
+	"github.com/google/uuid"
 )
-func ExtractPage(urls []models.MyURL) error{
+func ExtractPage(urls []models.MyURL) (pgs []models.Page, data [][]byte, err error){
+	var pages []models.Page
 	for _, myUrl := range urls{
 		// load page html
-		data, err := download.DownloadPage(myUrl)
+		byteData, err := download.DownloadPage(myUrl)
 		if err != nil{
-			return err
+			return nil, nil, err
 		}
+		crawlTime := time.Now().Unix()
 
 		// find html title
-		title, err := metadata.ExtractTitle(data)
+		title, err := metadata.ExtractTitle(byteData)
 		if err != nil{
-			return err
+			return nil, nil, err
 		}
 		fmt.Println("Title: ", title)
 
 		// find html description
-		desc, err := metadata.ExtractDescription(data)
+		desc, err := metadata.ExtractDescription(byteData)
 		if err != nil{
-			return err
+			return nil, nil, err
 		}
-		fmt.Println("Description: ", desc)
 
 		// parse all links
-		links, err := metadata.ExtractLinks(data)
+		links, err := metadata.ExtractLinks(byteData)
 		if err != nil{
-			return err
+			return nil, nil, err
 		}
 		fmt.Printf("Parsed %d links\n", len(links))
 
@@ -44,18 +48,31 @@ func ExtractPage(urls []models.MyURL) error{
 
 		filteredLinks, err = dedup.FilterByHash(filteredLinks)
 		if err != nil{
-			return err
+			return nil, nil, err
 		}
 		fmt.Println("Filtered links", filteredLinks)
 
 		// push urls to sqs
-		for _, link := range filteredLinks{
-			_, err := mysqs.SendMessage(link)
-			if err != nil{
-				return err
-			}
+		_, err = mysqs.SendBatchMessage(filteredLinks)
+		if err != nil{
+			return nil, nil, err
 		}
 		fmt.Printf("Success sending %d links to SQS\n", len(filteredLinks))
+		
+		id, err := uuid.NewRandom()
+		if err != nil{
+			return nil, nil, err
+		}
+		pages = append(pages, models.Page{
+			Id: id,
+			Url: myUrl.Url,
+			Url_hash: myUrl.Hash,
+			Title: title,
+			Description: desc,
+			Crawl_time: time.Duration(crawlTime),
+			Html_s3_key: myUrl.Hash,
+		})
+		data = append(data, byteData)
 	}
-	return nil
+	return pages, data, nil
 }

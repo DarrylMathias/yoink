@@ -4,3 +4,4 @@ todo*
 .env
 .env.local
 .env.prod
+*.pem
