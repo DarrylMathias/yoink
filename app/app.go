@@ -9,7 +9,10 @@ import (
 	"yoink/utils/myaws/s3"
 	mysqs "yoink/utils/myaws/sqs"
 	"yoink/utils/redis"
+	"yoink/utils/upstash"
 )
+
+var Counter int = 0
 
 func App(){
 	err := env.NewEnv(".env.prod")
@@ -31,6 +34,10 @@ func App(){
 	err = redis.NewClient()
 	if err != nil{
 		panic(fmt.Errorf("error in redis config --- %s", err.Error()))
+	}
+	err = upstash.NewClient()
+	if err != nil{
+		panic(fmt.Errorf("error in upstash config --- %s", err.Error()))
 	}
 	
 }

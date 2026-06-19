@@ -3,6 +3,7 @@ package extract
 import (
 	"fmt"
 	"time"
+	"yoink/app"
 	"yoink/crawler/extract/dedup"
 	"yoink/crawler/extract/download"
 	"yoink/crawler/extract/metadata"
@@ -58,6 +59,8 @@ func ExtractPage(urls []models.MyURL) (pgs []models.Page, data [][]byte, err err
 			return nil, nil, err
 		}
 		fmt.Printf("Success sending %d links to SQS\n", len(filteredLinks))
+		
+		app.Counter += len(filteredLinks)
 		
 		id, err := uuid.NewRandom()
 		if err != nil{
