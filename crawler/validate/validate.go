@@ -1,7 +1,6 @@
 package validate
 
 import (
-	"fmt"
 	"yoink/crawler/validate/hashtable"
 	"yoink/models"
 	"yoink/utils"
@@ -20,7 +19,6 @@ func NormalizeURLData(messages *sqs.ReceiveMessageOutput) ([]models.MyURL, error
 		if err != nil{
 			return normalizedURLs, err
 		}
-		fmt.Printf("Validating %s\n", url)
 
 		// hashurl
 		hashedURL, err := utils.HashURL(nURL)
@@ -34,19 +32,15 @@ func NormalizeURLData(messages *sqs.ReceiveMessageOutput) ([]models.MyURL, error
 			return normalizedURLs, err
 		}
 		if(seen){
-			fmt.Println("URL already crawled")
 			continue
 		}
 
 		// can crawl
 		if(utils.IsCrawlable(nURL)){
-			fmt.Println("Is crawlable")
 			normalizedURLs = append(normalizedURLs, models.MyURL{
 				Url: nURL,
 				Hash: hashedURL,
 			})
-		}else{
-			fmt.Printf("Can't crawl page %s :(\n", nURL)
 		}
 	}
 

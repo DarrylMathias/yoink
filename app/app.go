@@ -12,7 +12,9 @@ import (
 	"yoink/utils/upstash"
 )
 
-var Counter int = 0
+var Counter int64 = 0
+var CacheHit int64 = 0
+var CacheMiss int64 = 0
 
 func App(){
 	err := env.NewEnv(".env.prod")

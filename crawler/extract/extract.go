@@ -1,7 +1,7 @@
 package extract
 
 import (
-	"fmt"
+	"sync/atomic"
 	"time"
 	"yoink/app"
 	// "yoink/crawler/extract/dedup"
@@ -28,7 +28,6 @@ func ExtractPage(urls []models.MyURL) (pgs []models.Page, data [][]byte, err err
 		if err != nil{
 			return nil, nil, err
 		}
-		fmt.Println("Title: ", title)
 
 		// find html description
 		desc, err := metadata.ExtractDescription(byteData)
@@ -41,7 +40,6 @@ func ExtractPage(urls []models.MyURL) (pgs []models.Page, data [][]byte, err err
 		if err != nil{
 			return nil, nil, err
 		}
-		fmt.Printf("Parsed %d links\n", len(links))
 
 		// filter links => for now there is no priority, just 30 random links from each page
 		const MAX_LINKS_PER_PAGE = 30
@@ -52,16 +50,14 @@ func ExtractPage(urls []models.MyURL) (pgs []models.Page, data [][]byte, err err
 		// if err != nil{
 		// 	return nil, nil, err
 		// }
-		fmt.Println("Filtered links", filteredLinks)
 
 		// push urls to sqs
 		err = mysqs.SendBatchMessage(filteredLinks)
 		if err != nil{
 			return nil, nil, err
 		}
-		fmt.Printf("Success sending %d links to SQS\n", len(filteredLinks))
 		
-		app.Counter += len(filteredLinks)
+		atomic.AddInt64(&app.Counter, int64(len(filteredLinks)))
 		
 		id, err := uuid.NewRandom()
 		if err != nil{

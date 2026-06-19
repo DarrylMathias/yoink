@@ -11,7 +11,9 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"sync/atomic"
 	"time"
+	"yoink/app"
 	"yoink/utils/redis"
 
 	"github.com/benjaminestes/robots"
@@ -19,7 +21,7 @@ import (
 )
 
 var HTTPClient = &http.Client{
-    Timeout: 5 * time.Second,
+    Timeout: 3 * time.Second,
     CheckRedirect: func(req *http.Request, via []*http.Request) error {
         if len(via) >= 10 {
             return errors.New("too many redirects")
@@ -66,15 +68,14 @@ func IsCrawlable(url string) bool {
 
 	// cache hit
 	if err == nil {
-		fmt.Println("cache hit for robots.txt")
+		atomic.AddInt64(&app.CacheHit, 1)
 		data, err = robotstxt.FromString(cachedRobots)
 		if err != nil {
 			return true
 		}
 	} else {
 		// cache miss
-		fmt.Printf("cache miss for robots.txt")
-
+		atomic.AddInt64(&app.CacheMiss, 1)
 		res, err := MyGet(robotsURL)
 		if err != nil {
 			return true
@@ -236,7 +237,6 @@ func FilteredURLs(domain string, links []string, MAX_LINKS_PER_PAGE int) []strin
 		seen[normalizedURL] = struct{}{}
 
 		filteredLinks = append(filteredLinks, normalizedURL)
-		// fmt.Println(normalizedURL)
 	}
 	// randomise
 	rand.Shuffle(len(filteredLinks), func(i, j int) {

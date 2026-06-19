@@ -1,7 +1,8 @@
 package hashtable
 
 import (
-	"fmt"
+	"sync/atomic"
+	"yoink/app"
 	"yoink/models"
 	"yoink/utils/database"
 	"yoink/utils/upstash"
@@ -14,11 +15,11 @@ func AlreadySeen(hashedURL string) (bool, error){
 
 	// cache hit
 	if err == nil{
-		fmt.Println("hash cache hit")
+		atomic.AddInt64(&app.CacheHit, 1)
 		return true, nil
 	}else{
 		// cache miss
-		fmt.Println("hash cache miss")
+		atomic.AddInt64(&app.CacheMiss, 1)
 		page := new(models.Page)
 		db := database.DB
 		err := db.Where("url_hash = ?", hashedURL).First(page).Error

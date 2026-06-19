@@ -22,6 +22,7 @@ func GetSQSClient(){
 func ReceiveMessage() (*sqs.ReceiveMessageOutput, error){
 	config := &sqs.ReceiveMessageInput{
 		QueueUrl: SQSQueueURL,
+		MaxNumberOfMessages: 5,
 	}
 	message, err := SqsClient.ReceiveMessage(context.Background(), config)
 	return message, err

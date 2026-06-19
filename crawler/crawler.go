@@ -2,6 +2,8 @@ package crawler
 
 import (
 	"fmt"
+	"sync/atomic"
+	"yoink/app"
 	"yoink/crawler/extract"
 	"yoink/crawler/store"
 	"yoink/crawler/validate"
@@ -23,7 +25,6 @@ func Crawl() error {
 				fmt.Println("delete error:", err)
 			}
 		}
-		fmt.Println("deleted sqs message")
 	}()
 
 	// phase 1 : normalise and validate messages
@@ -31,13 +32,19 @@ func Crawl() error {
 	if err != nil{
 		return err
 	}
-	fmt.Println(normalizedMessages)
 
 	// phase 2 : download page and discover new urls
 	pages, data, err := extract.ExtractPage(normalizedMessages)
 	if err != nil{
 		return err
 	}
+
+	fmt.Printf(
+		"[counter=%d] processed=%d discovered=%d\n",
+		atomic.LoadInt64(&app.Counter),
+		len(normalizedMessages),
+		len(pages),
+	)
 
 	// phase 3 : s3 and rds storage
 	err = store.Store(pages, data)
