@@ -25,7 +25,7 @@ type Env struct{
 	RedisDatabase string `mapstructure:"REDIS_DATABASE"`
 	UpstashRedisRestURL string `mapstructure:"UPSTASH_REDIS_REST_URL"`
 	UpstashRedisRestToken string `mapstructure:"UPSTASH_REDIS_REST_TOKEN"`
-	ResendAPIKey string `mapstructure""RESEND_API_KEY"`
+	ResendAPIKey string `mapstructure:"RESEND_API_KEY"`
 	Application string `mapstructure:"APPLICATION"`
 }
 

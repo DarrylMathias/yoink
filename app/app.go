@@ -30,19 +30,26 @@ func StartHeartbeat() {
 	}()
 }
 
-func SendHearbeatMail(){
-	go func(){
-		for{
-			resend.SendEmail(
+func SendHearbeatMail() {
+	go func() {
+		for {
+			err, mailId := resend.SendEmail(
 				fmt.Sprintf(
 					"[HEARTBEAT] frontier=%d hits=%d misses=%d\n",
 					atomic.LoadInt64(&mysqs.NoOfSQSMessages),
 					atomic.LoadInt64(&CacheHit),
 					atomic.LoadInt64(&CacheMiss),
-				), "Crawling updates",
+				),
+				"Crawling updates",
 			)
 
-			time.Sleep(6*time.Hour)
+			if err != nil {
+				fmt.Printf("heartbeat mail failed: %v\n", err)
+			} else {
+				fmt.Printf("heartbeat mail sent: %s\n", mailId)
+			}
+
+			time.Sleep(6 * time.Hour)
 		}
 	}()
 }
