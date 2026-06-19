@@ -37,7 +37,7 @@ func StartQueueMonitor() {
 				fmt.Println("queue monitor:", err)
 			}
 
-			time.Sleep(10*time.Second)
+			time.Sleep(60*time.Second)
 		}
 	}()
 }
@@ -45,7 +45,7 @@ func StartQueueMonitor() {
 func ReceiveMessage() (*sqs.ReceiveMessageOutput, error){
 	config := &sqs.ReceiveMessageInput{
 		QueueUrl: SQSQueueURL,
-		MaxNumberOfMessages: 5,
+		MaxNumberOfMessages: 10,
 	}
 	message, err := SqsClient.ReceiveMessage(context.Background(), config)
 	return message, err

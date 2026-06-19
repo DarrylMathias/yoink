@@ -16,6 +16,10 @@ func Crawl() error {
 		return err
 	}
 
+	if len(messages.Messages) == 0 {
+		return nil
+	}
+
 	// we defer this so that if any part fails, the message is deleted from sqs always
 	defer func(){
 		// delete sqs message
