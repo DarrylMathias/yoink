@@ -12,7 +12,6 @@ import (
 	"yoink/utils/upstash"
 )
 
-var Counter int64 = 0
 var CacheHit int64 = 0
 var CacheMiss int64 = 0
 
@@ -27,9 +26,6 @@ func App(){
 	}
 
 	mysqs.GetSQSClient()
-	if err = mysqs.GetQueueURL(); err != nil{
-		panic(fmt.Errorf("error in fetching queue url --- %s", err.Error()))
-	}
 	s3.GetS3Client()
 
 	database.NewDatabase(env.EnvValue)

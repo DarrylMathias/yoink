@@ -3,7 +3,6 @@ package crawler
 import (
 	"fmt"
 	"sync/atomic"
-	"yoink/app"
 	"yoink/crawler/extract"
 	"yoink/crawler/store"
 	"yoink/crawler/validate"
@@ -25,6 +24,10 @@ func Crawl() error {
 				fmt.Println("delete error:", err)
 			}
 		}
+		atomic.AddInt64(
+			&mysqs.NoOfSQSMessages,
+			-int64(len(messages.Messages)),
+		)
 	}()
 
 	// phase 1 : normalise and validate messages
@@ -41,7 +44,7 @@ func Crawl() error {
 
 	fmt.Printf(
 		"[counter=%d] processed=%d discovered=%d\n",
-		atomic.LoadInt64(&app.Counter),
+		atomic.LoadInt64(&mysqs.NoOfSQSMessages),
 		len(normalizedMessages),
 		len(pages),
 	)

@@ -3,7 +3,6 @@ package extract
 import (
 	"sync/atomic"
 	"time"
-	"yoink/app"
 	// "yoink/crawler/extract/dedup"
 	"yoink/crawler/extract/download"
 	"yoink/crawler/extract/metadata"
@@ -57,7 +56,7 @@ func ExtractPage(urls []models.MyURL) (pgs []models.Page, data [][]byte, err err
 			return nil, nil, err
 		}
 		
-		atomic.AddInt64(&app.Counter, int64(len(filteredLinks)))
+		atomic.AddInt64(&mysqs.NoOfSQSMessages, int64(len(filteredLinks)))
 		
 		id, err := uuid.NewRandom()
 		if err != nil{

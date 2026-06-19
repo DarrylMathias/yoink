@@ -2,7 +2,10 @@ package mysqs
 
 import (
 	"context"
+	"fmt"
 	"strconv"
+	"sync/atomic"
+	"time"
 	"yoink/utils/env"
 	"yoink/utils/myaws"
 
@@ -13,10 +16,30 @@ import (
 
 var SqsClient *sqs.Client
 var SQSQueueURL *string
+var NoOfSQSMessages int64
 
 func GetSQSClient(){
 	sqsClient := sqs.NewFromConfig(*myaws.AwsConfig)
 	SqsClient = sqsClient
+	if err := GetQueueURL(); err != nil{
+		panic(fmt.Errorf("error in fetching queue url --- %s", err.Error()))
+	}
+	if err := GetNoOfMessages(); err != nil{
+		panic(fmt.Errorf("error in getting messages in queue --- %s", err.Error()))
+	}
+	StartQueueMonitor()
+}
+
+func StartQueueMonitor() {
+	go func() {
+		for {
+			if err := GetNoOfMessages(); err != nil {
+				fmt.Println("queue monitor:", err)
+			}
+
+			time.Sleep(10*time.Second)
+		}
+	}()
 }
 
 func ReceiveMessage() (*sqs.ReceiveMessageOutput, error){
@@ -26,6 +49,31 @@ func ReceiveMessage() (*sqs.ReceiveMessageOutput, error){
 	}
 	message, err := SqsClient.ReceiveMessage(context.Background(), config)
 	return message, err
+}
+
+func GetNoOfMessages() (error){
+	config := &sqs.GetQueueAttributesInput{
+        QueueUrl: SQSQueueURL,
+        AttributeNames: 
+		[]types.QueueAttributeName{
+			types.QueueAttributeNameApproximateNumberOfMessages,
+		},
+    }
+    result, err := SqsClient.GetQueueAttributes(context.TODO(), config)
+    if err != nil {
+        return err
+    }
+
+    if approxCount, exists := result.Attributes["ApproximateNumberOfMessages"]; exists {
+        val, err := strconv.ParseInt(approxCount, 10, 64)
+		atomic.StoreInt64(&NoOfSQSMessages, val)
+		if err != nil{
+			return err
+		}
+    } else {
+        return fmt.Errorf("Attribute not found.")
+    }
+	return nil
 }
 
 func SendMessage(data string) (*sqs.SendMessageOutput, error){
