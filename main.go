@@ -13,7 +13,7 @@ func main() {
 		fmt.Println("=============================================================")
 		t1 := time.Now().UnixMilli()
 		if err := crawler.Crawl(); err != nil{
-			fmt.Println("error in main.go => %w", err)
+			fmt.Println("error in main.go => ", err)
 			continue
 		}
 		t2 := time.Now().UnixMilli()

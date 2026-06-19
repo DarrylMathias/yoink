@@ -66,13 +66,14 @@ func IsCrawlable(url string) bool {
 
 	// cache hit
 	if err == nil {
+		fmt.Println("cache hit for robots.txt")
 		data, err = robotstxt.FromString(cachedRobots)
 		if err != nil {
 			return true
 		}
 	} else {
 		// cache miss
-		fmt.Printf("%s is not cached in redis\n", host)
+		fmt.Printf("cache miss for robots.txt")
 
 		res, err := MyGet(robotsURL)
 		if err != nil {

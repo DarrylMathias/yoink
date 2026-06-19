@@ -5,7 +5,7 @@ import (
 	"yoink/models"
 	"yoink/utils/database"
 	"yoink/utils/myaws/s3"
-	"yoink/utils/redis"
+	"yoink/utils/upstash"
 
 	"github.com/dustin/go-humanize"
 	"gorm.io/gorm/clause"
@@ -35,10 +35,11 @@ func Store(pages []models.Page, data [][]byte) error{
 		fmt.Println("Metadata stored in RDS successfully")
 
 		// update redis
-		err = redis.SetCache(page.Url_hash, "1")
+		err = upstash.SetCache(page.Url_hash, "1")
 		if err != nil{
 			return err
 		}
+		fmt.Println("upstash redis updated successfully")
 	}
 
 	return nil

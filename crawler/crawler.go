@@ -15,6 +15,17 @@ func Crawl() error {
 		return err
 	}
 
+	// we defer this so that if any part fails, the message is deleted from sqs always
+	defer func(){
+		// delete sqs message
+		for _, msg := range messages.Messages{
+			if err := mysqs.DeleteMessage(msg); err != nil{
+				fmt.Println("delete error:", err)
+			}
+		}
+		fmt.Println("deleted sqs message")
+	}()
+
 	// phase 1 : normalise and validate messages
 	normalizedMessages, err := validate.NormalizeURLData(messages)
 	if err != nil{
@@ -32,13 +43,6 @@ func Crawl() error {
 	err = store.Store(pages, data)
 	if err != nil{
 		return err
-	}
-
-	// delete sqs message
-	for _, msg := range messages.Messages{
-		if err := mysqs.DeleteMessage(msg); err != nil{
-			return err
-		}
 	}
 
 	return nil

@@ -2,11 +2,14 @@ package database
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"yoink/models"
 	"yoink/utils/env"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -19,7 +22,15 @@ func NewDatabase(env *env.Env){
 		dsn = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=verify-full sslrootcert=%s", env.DBHost, env.DBPort, env.DBUser, env.DBPassword, env.DBName, env.DBSSLRootCert)
 	}
 	
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		Logger: logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			IgnoreRecordNotFoundError: true,
+			LogLevel: logger.Error,
+		},
+	),
+	})
 	if err != nil{
 		panic(fmt.Errorf("fatal error database connection: %w", err))
 	}

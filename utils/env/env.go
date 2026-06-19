@@ -23,8 +23,8 @@ type Env struct{
 	RedisUsername string `mapstructure:"REDIS_USERNAME"`
 	RedisPassword string `mapstructure:"REDIS_PASSWORD"`
 	RedisDatabase string `mapstructure:"REDIS_DATABASE"`
-	UpstashRedisRestURL string `mapstrucutre:"UPSTASH_REDIS_REST_URL"`
-	UpstashRedisRestToken string `mapstrucutre:"UPSTASH_REDIS_REST_TOKEN"`
+	UpstashRedisRestURL string `mapstructure:"UPSTASH_REDIS_REST_URL"`
+	UpstashRedisRestToken string `mapstructure:"UPSTASH_REDIS_REST_TOKEN"`
 	Application string `mapstructure:"APPLICATION"`
 }
 
