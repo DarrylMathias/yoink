@@ -19,7 +19,7 @@ func main() {
 	t1 := time.Now().UnixMilli()
 	for i := 0; i < Workers; i++ {
 		task := func() {
-			for atomic.LoadInt64(&mysqs.NoOfSQSMessages) < 10_000 {
+			for atomic.LoadInt64(&mysqs.NoOfSQSMessages) < 30_000 {
 				t1 := time.Now().UnixMilli()
 				if err := crawler.Crawl(); err != nil{
 					fmt.Println("error in main.go => ", err)
@@ -39,7 +39,7 @@ func main() {
 
 	resend.SendEmail(
 		fmt.Sprintf(`
-		============== SUMMARY ==============
+		====== SUMMARY ======
 		urls discovered: %d,
 		cache hits: %d,
 		cache misses:%d,
