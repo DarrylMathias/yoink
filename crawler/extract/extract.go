@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 	"yoink/app"
-	"yoink/crawler/extract/dedup"
+	// "yoink/crawler/extract/dedup"
 	"yoink/crawler/extract/download"
 	"yoink/crawler/extract/metadata"
 	"yoink/models"
@@ -47,10 +47,11 @@ func ExtractPage(urls []models.MyURL) (pgs []models.Page, data [][]byte, err err
 		const MAX_LINKS_PER_PAGE = 30
 		filteredLinks := utils.FilteredURLs(myUrl.Url, links, MAX_LINKS_PER_PAGE)
 
-		filteredLinks, err = dedup.FilterByHash(filteredLinks)
-		if err != nil{
-			return nil, nil, err
-		}
+		// cant afford these many cache and db checks, too expensive, so for now, just pushing to sqs
+		// filteredLinks, err = dedup.FilterByHash(filteredLinks)
+		// if err != nil{
+		// 	return nil, nil, err
+		// }
 		fmt.Println("Filtered links", filteredLinks)
 
 		// push urls to sqs
