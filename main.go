@@ -19,7 +19,13 @@ func main() {
 	t1 := time.Now().UnixMilli()
 	for i := 0; i < Workers; i++ {
 		task := func() {
-			for atomic.LoadInt64(&mysqs.NoOfSQSMessages) < 30_000 {
+			for {
+				if app.IsDiscovering && atomic.LoadInt64(&mysqs.NoOfSQSMessages) >= 1_000_000 {
+					return
+				}
+				if !app.IsDiscovering && atomic.LoadInt64(&mysqs.NoOfSQSMessages )<= 0{
+					return
+				}
 				t1 := time.Now().UnixMilli()
 				if err := crawler.Crawl(); err != nil{
 					fmt.Println("error in main.go => ", err)
