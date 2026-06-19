@@ -8,11 +8,12 @@ import (
 	"yoink/app"
 	"yoink/crawler"
 	mysqs "yoink/utils/myaws/sqs"
+	"yoink/utils/resend"
 )
 
 func main() {
     app.App()
-	const Workers = 10
+	const Workers = 20
 	var wg sync.WaitGroup
 
 	t1 := time.Now().UnixMilli()
@@ -36,30 +37,20 @@ func main() {
 
 	t2 := time.Now().UnixMilli()
 
-	fmt.Println("============== SUMMARY ==============")
-	fmt.Println(
-		"urls discovered:",
-		atomic.LoadInt64(&mysqs.NoOfSQSMessages),
-	)
-
-	fmt.Println(
-		"cache hits:",
-		atomic.LoadInt64(&app.CacheHit),
-	)
-
-	fmt.Println(
-		"cache misses:",
-		atomic.LoadInt64(&app.CacheMiss),
-	)
-
-	fmt.Println(
-		"workers:",
-		Workers,
-	)
-
-	fmt.Println(
-		"runtime:",
-		t2-t1,
-		"ms",
+	resend.SendEmail(
+		fmt.Sprintf(`
+		============== SUMMARY ==============
+		urls discovered: %d,
+		cache hits: %d,
+		cache misses:%d,
+		workers:%d,
+		runtime:%d,
+		`, 	atomic.LoadInt64(&mysqs.NoOfSQSMessages),
+			atomic.LoadInt64(&app.CacheHit),
+			atomic.LoadInt64(&app.CacheMiss),
+			Workers,
+			t2-t1,
+		),
+		"COMPLETED EC2 CRAWLING",
 	)
 }
