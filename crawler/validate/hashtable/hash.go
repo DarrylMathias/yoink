@@ -1,6 +1,7 @@
 package hashtable
 
 import (
+	"fmt"
 	"sync/atomic"
 	"yoink/app"
 	"yoink/models"
@@ -32,7 +33,7 @@ func AlreadySeen(hashedURL string) (bool, error){
 		}
 		err = upstash.SetCache(hashedURL, "1")
 		if err != nil{
-			return false, err
+			fmt.Println("upstash set failed:", err)
 		}
 	}
 
