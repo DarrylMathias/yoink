@@ -14,7 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 	"yoink/app"
-	"yoink/utils/redis"
+	"yoink/utils/upstash"
 
 	"github.com/benjaminestes/robots"
 	"github.com/temoto/robotstxt"
@@ -62,8 +62,8 @@ func IsCrawlable(url string) bool {
 		return true
 	}
 
-	// try redis
-	cachedRobots, err := redis.GetCache(host)
+	// try upstash
+	cachedRobots, err := upstash.GetCache(host)
 	var data *robotstxt.RobotsData
 
 	// cache hit
@@ -93,7 +93,7 @@ func IsCrawlable(url string) bool {
 			return true
 		}
 
-		_ = redis.SetCache(host, robotsText)
+		_ = upstash.SetCache(host, robotsText)
 	}
 	grp := data.FindGroup("yoinkbot")
 	return grp.Test(url)

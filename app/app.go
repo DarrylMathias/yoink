@@ -58,7 +58,7 @@ var CacheHit int64 = 0
 var CacheMiss int64 = 0
 
 // set to true when the aim is to have a million messages in sqs, and false after that stage
-var IsDiscovering bool = false
+var IsDiscovering bool = true
 
 func App(){
 	err := env.NewEnv(".env.prod")

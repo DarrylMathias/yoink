@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"sync/atomic"
 	"yoink/app"
-	"yoink/models"
-	"yoink/utils/database"
-	"yoink/utils/upstash"
 
-	"gorm.io/gorm"
+	// "yoink/models"
+	// "yoink/utils/database"
+	"yoink/utils/redis"
+	// "gorm.io/gorm"
 )
 
 func AlreadySeen(hashedURL string) (bool, error){
-	_, err := upstash.GetCache(hashedURL)
+	_, err := redis.GetCache(hashedURL)
 
 	// cache hit
 	if err == nil{
@@ -21,19 +21,22 @@ func AlreadySeen(hashedURL string) (bool, error){
 	}else{
 		// cache miss
 		atomic.AddInt64(&app.CacheMiss, 1)
-		page := new(models.Page)
-		db := database.DB
-		err := db.Where("url_hash = ?", hashedURL).First(page).Error
 
-		if err != nil {
-			if err == gorm.ErrRecordNotFound {
-				return false, nil
-			}
-			return false, err
-		}
-		err = upstash.SetCache(hashedURL, "1")
+		// db is absolutely hitting limits, so redis will only be the seen set rn
+
+		// page := new(models.Page)
+		// db := database.DB
+		// err := db.Where("url_hash = ?", hashedURL).First(page).Error
+
+		// if err != nil {
+		// 	if err == gorm.ErrRecordNotFound {
+		// 		return false, nil
+		// 	}
+		// 	return false, err
+		// }
+		err = redis.SetCache(hashedURL, "1")
 		if err != nil{
-			fmt.Println("upstash set failed:", err)
+			fmt.Println("redis set failed:", err)
 		}
 	}
 

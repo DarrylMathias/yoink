@@ -5,7 +5,7 @@ import (
 	"yoink/models"
 	"yoink/utils/database"
 	"yoink/utils/myaws/s3"
-	"yoink/utils/upstash"
+	"yoink/utils/redis"
 
 	"gorm.io/gorm/clause"
 )
@@ -32,9 +32,9 @@ func Store(pages []models.Page, data [][]byte) error{
 		}
 
 		// update redis
-		err = upstash.SetCache(page.Url_hash, "1")
+		err = redis.SetCache(page.Url_hash, "1")
 		if err != nil{
-			fmt.Println("upstash set failed:", err)
+			fmt.Println("redis set failed:", err)
 		}
 	}
 
