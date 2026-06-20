@@ -5,11 +5,11 @@ import (
 	"sync/atomic"
 	"yoink/app"
 
-	// "yoink/models"
-	// "yoink/utils/database"
+	"yoink/models"
+	"yoink/utils/database"
 	myredis "yoink/utils/redis"
 	"github.com/redis/go-redis/v9"
-	// "gorm.io/gorm"
+	"gorm.io/gorm"
 )
 
 func AlreadySeen(hashedURL string) (bool, error){
@@ -25,18 +25,16 @@ func AlreadySeen(hashedURL string) (bool, error){
 	if err == redis.Nil {
 		atomic.AddInt64(&app.CacheMiss, 1)
 
-		// db is absolutely hitting limits, so redis will only be the seen set rn
+		page := new(models.Page)
+		db := database.DB
+		err := db.Where("url_hash = ?", hashedURL).First(page).Error
 
-		// page := new(models.Page)
-		// db := database.DB
-		// err := db.Where("url_hash = ?", hashedURL).First(page).Error
-
-		// if err != nil {
-		// 	if err == gorm.ErrRecordNotFound {
-		// 		return false, nil
-		// 	}
-		// 	return false, err
-		// }
+		if err != nil {
+			if err == gorm.ErrRecordNotFound {
+				return false, nil
+			}
+			return false, err
+		}
 		if err := myredis.SetCache(hashedURL, "1"); err != nil {
 			fmt.Println("redis set failed:", err)
 		}
