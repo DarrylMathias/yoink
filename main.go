@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 	"yoink/app"
+	// "yoink/seed"
 	"yoink/crawler"
 	mysqs "yoink/utils/myaws/sqs"
 	"yoink/utils/resend"
@@ -20,10 +21,11 @@ func main() {
 	for i := 0; i < Workers; i++ {
 		task := func() {
 			for {
-				if app.IsDiscovering && atomic.LoadInt64(&mysqs.NoOfSQSMessages) >= 1_000_000 {
+				if app.IsDiscovering && atomic.LoadInt64(&mysqs.NoOfSQSMessages) >= 3_000_000 {
 					return
 				}
-				if !app.IsDiscovering && atomic.LoadInt64(&mysqs.NoOfSQSMessages )<= 0{
+				if atomic.LoadInt64(&mysqs.NoOfSQSMessages ) <= 0{
+					fmt.Println("empty sqs")
 					return
 				}
 				t1 := time.Now().UnixMilli()
@@ -59,4 +61,5 @@ func main() {
 		),
 		"COMPLETED EC2 CRAWLING",
 	)
+	// seed.SeedSQS()
 }
