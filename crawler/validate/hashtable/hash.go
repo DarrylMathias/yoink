@@ -7,19 +7,22 @@ import (
 
 	// "yoink/models"
 	// "yoink/utils/database"
-	"yoink/utils/redis"
+	myredis "yoink/utils/redis"
+	"github.com/redis/go-redis/v9"
 	// "gorm.io/gorm"
 )
 
 func AlreadySeen(hashedURL string) (bool, error){
-	_, err := redis.GetCache(hashedURL)
+	_, err := myredis.GetCache(hashedURL)
 
 	// cache hit
 	if err == nil{
 		atomic.AddInt64(&app.CacheHit, 1)
 		return true, nil
-	}else{
-		// cache miss
+	}
+
+	// cache miss
+	if err == redis.Nil {
 		atomic.AddInt64(&app.CacheMiss, 1)
 
 		// db is absolutely hitting limits, so redis will only be the seen set rn
@@ -34,11 +37,13 @@ func AlreadySeen(hashedURL string) (bool, error){
 		// 	}
 		// 	return false, err
 		// }
-		err = redis.SetCache(hashedURL, "1")
-		if err != nil{
+		if err := myredis.SetCache(hashedURL, "1"); err != nil {
 			fmt.Println("redis set failed:", err)
 		}
+
+		return false, nil
 	}
 
-	return true, nil
+	// redis failure
+	return false, err
 }
