@@ -181,41 +181,17 @@ go mod download
 
 ### Environment Variables
 
-Create a `.env.local` file:
+Copy `.env.example` file to `.env`:
 
-```env
-HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASSWORD=
-DB_NAME=yoink_local
-# DB_SSL_ROOT_CERT=
-
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-SQS_NAME=
-S3_BUCKET_NAME=
-
-REDIS_ADDRESS=
-REDIS_USERNAME=
-REDIS_PASSWORD=
-REDIS_DATABASE=0
-
-UPSTASH_REDIS_REST_URL=
-UPSTASH_REDIS_REST_TOKEN=
-
-# For e-mailing alerts and hearbeats
-RESEND_API_KEY=
-
-PORT=
-APPLICATION=dev
+```
+cp .env.example .env
 ```
 
 ---
 
 ## Configuration
 
-Most configuration is handled through global variables in [`app/app.go`](./app/app.go).
+Most configuration is handled through [`.env.config`](./.env.config).
 
 These values can be adjusted depending on available infrastructure and crawl requirements.
 
@@ -304,45 +280,13 @@ Directory structure:
     ├── main.go
     ├── app/
     │   └── app.go
+    ├── indexer/
+    │   ├── indexer.go
     ├── crawler/
     │   ├── crawler.go
-    │   ├── extract/
-    │   │   ├── extract.go
-    │   │   ├── dedup/
-    │   │   │   └── dedup.go
-    │   │   ├── download/
-    │   │   │   └── download.go
-    │   │   └── metadata/
-    │   │       └── metadata.go
-    │   ├── store/
-    │   │   └── store.go
-    │   └── validate/
-    │       ├── validate.go
-    │       └── hashtable/
-    │           └── hash.go
     ├── models/
-    │   ├── myURL.go
-    │   └── page.go
     ├── seed/
-    │   └── sqs_seed.go
     └── utils/
-        ├── url.go
-        ├── database/
-        │   └── database.go
-        ├── error/
-        │   └── error.go
-        ├── myaws/
-        │   ├── config.go
-        │   ├── s3/
-        │   │   └── s3.go
-        │   └── sqs/
-        │       └── sqs.go
-        ├── redis/
-        │   └── redis.go
-        ├── resend/
-        │   └── resend.go
-        └── upstash/
-            └── upstash.go
 
 ```
 
