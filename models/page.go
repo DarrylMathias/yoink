@@ -12,4 +12,5 @@ type Page struct{
 	Description string `json:"description"`
 	Crawl_time int64 `json:"crawl_time"`
 	Html_s3_key string `json:"html_s3_key" gorm:"not null"`
+	Document_length int32 `json:"document_length"`
 }

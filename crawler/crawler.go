@@ -9,7 +9,7 @@ import (
 	mysqs "yoink/utils/myaws/sqs"
 )
 
-func Crawl() error {
+func Crawl(isDiscovering bool) error {
 	// receive message from sqs
 	messages, err := mysqs.ReceiveMessage()
 	if err != nil{
@@ -41,7 +41,7 @@ func Crawl() error {
 	}
 
 	// phase 2 : download page and discover new urls
-	pages, data, err := extract.ExtractPage(normalizedMessages)
+	pages, data, err := extract.ExtractPage(normalizedMessages, isDiscovering)
 	if err != nil{
 		return err
 	}

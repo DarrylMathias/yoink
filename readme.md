@@ -219,8 +219,6 @@ Most configuration is handled through global variables in [`app/app.go`](./app/a
 
 These values can be adjusted depending on available infrastructure and crawl requirements.
 
-For dev environments, `set err := env.NewEnv(".env.local")` in `app/app.go`
-
 ---
 
 ## How it Works

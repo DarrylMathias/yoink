@@ -3,11 +3,11 @@ package hashtable
 import (
 	"fmt"
 	"sync/atomic"
-	"yoink/app"
 
 	// "yoink/models"
 	// "yoink/utils/database"
 	myredis "yoink/utils/redis"
+
 	"github.com/redis/go-redis/v9"
 	// "gorm.io/gorm"
 )
@@ -17,13 +17,13 @@ func AlreadySeen(hashedURL string) (bool, error){
 
 	// cache hit
 	if err == nil{
-		atomic.AddInt64(&app.CacheHit, 1)
+		atomic.AddInt64(&myredis.CacheHit, 1)
 		return true, nil
 	}
 
 	// cache miss
 	if err == redis.Nil {
-		atomic.AddInt64(&app.CacheMiss, 1)
+		atomic.AddInt64(&myredis.CacheMiss, 1)
 
 		// db expensive
 		// page := new(models.Page)

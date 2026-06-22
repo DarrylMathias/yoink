@@ -5,7 +5,6 @@ import (
 	"time"
 
 	// "yoink/crawler/extract/dedup"
-	"yoink/app"
 	"yoink/crawler/extract/download"
 	"yoink/crawler/extract/metadata"
 	"yoink/models"
@@ -14,7 +13,7 @@ import (
 
 	"github.com/google/uuid"
 )
-func ExtractPage(urls []models.MyURL) (pgs []models.Page, data [][]byte, err error){
+func ExtractPage(urls []models.MyURL, isDiscovering bool) (pgs []models.Page, data [][]byte, err error){
 	var pages []models.Page
 	for _, myUrl := range urls{
 		// load page html
@@ -37,7 +36,7 @@ func ExtractPage(urls []models.MyURL) (pgs []models.Page, data [][]byte, err err
 		}
 
 		// only perform during the discovering phase
-		if app.IsDiscovering{
+		if isDiscovering{
 			// parse all links
 			links, err := metadata.ExtractLinks(byteData)
 			if err != nil{

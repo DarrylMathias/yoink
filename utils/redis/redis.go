@@ -11,6 +11,8 @@ import (
 )
 
 var RDB *redis.Client
+var CacheHit int64 = 0
+var CacheMiss int64 = 0
 
 func NewClient() error{
 	redis_db, err := strconv.Atoi(env.EnvValue.RedisDatabase)

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
-	"yoink/app"
+	myredis "yoink/utils/redis"
 	"yoink/utils/upstash"
 
 	"github.com/benjaminestes/robots"
@@ -68,14 +68,14 @@ func IsCrawlable(url string) bool {
 
 	// cache hit
 	if err == nil {
-		atomic.AddInt64(&app.CacheHit, 1)
+		atomic.AddInt64(&myredis.CacheHit, 1)
 		data, err = robotstxt.FromString(cachedRobots)
 		if err != nil {
 			return true
 		}
 	} else {
 		// cache miss
-		atomic.AddInt64(&app.CacheMiss, 1)
+		atomic.AddInt64(&myredis.CacheMiss, 1)
 		res, err := MyGet(robotsURL)
 		if err != nil {
 			return true
