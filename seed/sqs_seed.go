@@ -3,6 +3,7 @@ package seed
 import (
 	"fmt"
 	"math/rand/v2"
+	"yoink/utils/env"
 	mysqs "yoink/utils/myaws/sqs"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -470,13 +471,20 @@ func SeedSQS(){
 		"https://www.finewoodworking.com",
 		"https://www.mushroomexpert.com",
 	}
-	mysqs.GetQueueURL()
 
 	rand.Shuffle(len(SeedURLs), func(i, j int) {
 		SeedURLs[i], SeedURLs[j] = SeedURLs[j], SeedURLs[i]
 	})
+
+	// fetch crawler queue url
+	sqsUrl, err := mysqs.GetQueueURL(env.EnvValue.CrawlerSqsName)
+	if err != nil{
+		fmt.Printf("error in fetching queue url --- %s", err.Error())
+		return
+	}
+
 	for i, url := range SeedURLs{
-		output, err := mysqs.SendMessage(url)
+		output, err := mysqs.SendMessage(sqsUrl, url)
 		if err != nil{
 			panic(fmt.Errorf("error in sqs send message --- %s", err.Error()))
 		}

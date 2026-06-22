@@ -13,7 +13,7 @@ import (
 
 	"github.com/google/uuid"
 )
-func ExtractPage(urls []models.MyURL, isDiscovering bool) (pgs []models.Page, data [][]byte, err error){
+func ExtractPage(urls []models.MyURL, isDiscovering bool, sqsUrl *string) (pgs []models.Page, data [][]byte, err error){
 	var pages []models.Page
 	for _, myUrl := range urls{
 		// load page html
@@ -54,7 +54,7 @@ func ExtractPage(urls []models.MyURL, isDiscovering bool) (pgs []models.Page, da
 			// }
 
 			// push urls to sqs
-			err = mysqs.SendBatchMessage(filteredLinks)
+			err = mysqs.SendBatchMessage(sqsUrl, filteredLinks)
 			if err != nil{
 				return nil, nil, err
 			}

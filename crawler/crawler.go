@@ -9,9 +9,10 @@ import (
 	mysqs "yoink/utils/myaws/sqs"
 )
 
-func Crawl(isDiscovering bool) error {
+func Crawl(isDiscovering bool, sqsURL *string) error {
+
 	// receive message from sqs
-	messages, err := mysqs.ReceiveMessage()
+	messages, err := mysqs.ReceiveMessage(sqsURL)
 	if err != nil{
 		return err
 	}
@@ -24,7 +25,7 @@ func Crawl(isDiscovering bool) error {
 	defer func(){
 		// delete sqs message
 		for _, msg := range messages.Messages{
-			if err := mysqs.DeleteMessage(msg); err != nil{
+			if err := mysqs.DeleteMessage(sqsURL, msg); err != nil{
 				fmt.Println("delete error:", err)
 			}
 		}
@@ -41,7 +42,7 @@ func Crawl(isDiscovering bool) error {
 	}
 
 	// phase 2 : download page and discover new urls
-	pages, data, err := extract.ExtractPage(normalizedMessages, isDiscovering)
+	pages, data, err := extract.ExtractPage(normalizedMessages, isDiscovering, sqsURL)
 	if err != nil{
 		return err
 	}

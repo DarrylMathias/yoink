@@ -18,6 +18,12 @@ import (
 var IsDiscovering bool = true
 
 func Crawler(){
+	// fetch crawler queue url
+	sqsUrl, err := mysqs.GetQueueURL(env.EnvValue.CrawlerSqsName)
+	if err != nil{
+		fmt.Printf("error in fetching queue url --- %s", err.Error())
+		return
+	}
 
 	// set up periodic logging
 	if env.ConfigValue.Application == "dev"{
@@ -39,6 +45,12 @@ func Crawler(){
 	}
 	var wg sync.WaitGroup
 
+	// queue monitor setup
+	if err := mysqs.GetNoOfMessages(sqsUrl); err != nil{
+		panic(fmt.Errorf("error in getting messages in queue --- %s", err.Error()))
+	}
+	mysqs.StartQueueMonitor(sqsUrl)
+
 	// main logic
 	t1 := time.Now().UnixMilli()
 	for i := 0; i < Workers; i++ {
@@ -52,7 +64,7 @@ func Crawler(){
 					return
 				}
 				t1 := time.Now().UnixMilli()
-				if err := crawler.Crawl(IsDiscovering); err != nil{
+				if err := crawler.Crawl(IsDiscovering, sqsUrl); err != nil{
 					fmt.Println("error in main.go => ", err)
 					continue
 				}

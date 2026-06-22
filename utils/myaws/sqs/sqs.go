@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"sync/atomic"
 	"time"
-	"yoink/utils/env"
 	"yoink/utils/myaws"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,25 +14,17 @@ import (
 )
 
 var SqsClient *sqs.Client
-var SQSQueueURL *string
 var NoOfSQSMessages int64
 
 func GetSQSClient(){
 	sqsClient := sqs.NewFromConfig(*myaws.AwsConfig)
 	SqsClient = sqsClient
-	if err := GetQueueURL(); err != nil{
-		panic(fmt.Errorf("error in fetching queue url --- %s", err.Error()))
-	}
-	if err := GetNoOfMessages(); err != nil{
-		panic(fmt.Errorf("error in getting messages in queue --- %s", err.Error()))
-	}
-	StartQueueMonitor()
 }
 
-func StartQueueMonitor() {
+func StartQueueMonitor(queueURL *string) {
 	go func() {
 		for {
-			if err := GetNoOfMessages(); err != nil {
+			if err := GetNoOfMessages(queueURL); err != nil {
 				fmt.Println("queue monitor:", err)
 			}
 
@@ -42,18 +33,18 @@ func StartQueueMonitor() {
 	}()
 }
 
-func ReceiveMessage() (*sqs.ReceiveMessageOutput, error){
+func ReceiveMessage(queueURL *string) (*sqs.ReceiveMessageOutput, error){
 	config := &sqs.ReceiveMessageInput{
-		QueueUrl: SQSQueueURL,
+		QueueUrl: queueURL,
 		MaxNumberOfMessages: 10,
 	}
 	message, err := SqsClient.ReceiveMessage(context.Background(), config)
 	return message, err
 }
 
-func GetNoOfMessages() (error){
+func GetNoOfMessages(queueURL *string) (error){
 	config := &sqs.GetQueueAttributesInput{
-        QueueUrl: SQSQueueURL,
+        QueueUrl: queueURL,
         AttributeNames: 
 		[]types.QueueAttributeName{
 			types.QueueAttributeNameApproximateNumberOfMessages,
@@ -76,16 +67,16 @@ func GetNoOfMessages() (error){
 	return nil
 }
 
-func SendMessage(data string) (*sqs.SendMessageOutput, error){
+func SendMessage(queueURL *string, data string) (*sqs.SendMessageOutput, error){
 	config := &sqs.SendMessageInput{
 		MessageBody: aws.String(data),
-		QueueUrl: SQSQueueURL,
+		QueueUrl: queueURL,
 	}
 	output, err := SqsClient.SendMessage(context.Background(), config)
 	return output, err
 }
 
-func SendBatchMessage(data []string) (error){
+func SendBatchMessage(queueURL *string, data []string) (error){
 	// chunking since aws allows only 10 msgs per batch
 	for i:=0; i<len(data); i+=10{
 		end := i + 10
@@ -101,7 +92,7 @@ func SendBatchMessage(data []string) (error){
 			})
 		}
 		config := &sqs.SendMessageBatchInput{
-			QueueUrl: SQSQueueURL,
+			QueueUrl: queueURL,
 			Entries: urls,
 		}
 		_, err := SqsClient.SendMessageBatch(context.Background(), config)
@@ -112,24 +103,23 @@ func SendBatchMessage(data []string) (error){
 	return nil
 }
 
-func DeleteMessage(input types.Message) error{
+func DeleteMessage(queueURL *string, input types.Message) error{
 	config := &sqs.DeleteMessageInput{
-		QueueUrl: SQSQueueURL,
+		QueueUrl: queueURL,
 		ReceiptHandle: input.ReceiptHandle,
 	}
 	_, err := SqsClient.DeleteMessage(context.Background(), config)
 	return err
 }
 
-func GetQueueURL() error{
+func GetQueueURL(queueURL string) (*string ,error){
 	config := &sqs.GetQueueUrlInput{	
-		QueueName: aws.String(env.EnvValue.SqsName),
+		QueueName: aws.String(queueURL),
 	}
 	queue, err := SqsClient.GetQueueUrl(context.Background(), config)
 	if err != nil{
-		return err
+		return nil, err
 	}
-	SQSQueueURL = queue.QueueUrl
-	return nil
+	return queue.QueueUrl, nil
 }
 

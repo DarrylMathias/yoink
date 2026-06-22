@@ -17,7 +17,8 @@ type Env struct{
 
 	AwsAccessKeyId string `mapstructure:"AWS_ACCESS_KEY_ID"`
 	AwsSecretAccessKey string `mapstructure:"AWS_SECRET_ACCESS_KEY"`
-	SqsName string `mapstructure:"SQS_NAME"`
+	CrawlerSqsName string `mapstructure:"CRAWLER_SQS_NAME"`
+	IndexerSqsName string `mapstructure:"INDEXER_SQS_NAME"`
 	S3BucketName string `mapstructure:"S3_BUCKET_NAME"`
 
 	RedisAddress string `mapstructure:"REDIS_ADDRESS"`
