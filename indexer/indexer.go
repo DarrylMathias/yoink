@@ -8,7 +8,6 @@ import (
 )
 
 func Indexer(sqsURL *string) error{
-
 	// receive message from sqs
 	messages, err := mysqs.ReceiveMessage(sqsURL)
 	if err != nil{

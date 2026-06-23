@@ -6,7 +6,10 @@ import (
 	"yoink/crawler/extract"
 	"yoink/crawler/store"
 	"yoink/crawler/validate"
+	"yoink/utils/env"
 	mysqs "yoink/utils/myaws/sqs"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
 func Crawl(isDiscovering bool, sqsURL *string) error {
@@ -59,6 +62,13 @@ func Crawl(isDiscovering bool, sqsURL *string) error {
 	if err != nil{
 		return err
 	}
+
+	// final phase => push to indexer sqs queue
+	var msgs []string
+	for _, msg := range normalizedMessages{
+		msgs = append(msgs, msg.Hash)
+	}
+	mysqs.SendBatchMessage(aws.String(env.EnvValue.IndexerSqsName), msgs)
 
 	return nil
 }
