@@ -36,7 +36,7 @@ func StartQueueMonitor(queueURL *string) {
 func ReceiveMessage(queueURL *string) (*sqs.ReceiveMessageOutput, error){
 	config := &sqs.ReceiveMessageInput{
 		QueueUrl: queueURL,
-		MaxNumberOfMessages: 10,
+		// MaxNumberOfMessages: 10,
 	}
 	message, err := SqsClient.ReceiveMessage(context.Background(), config)
 	return message, err
