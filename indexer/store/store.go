@@ -1,6 +1,7 @@
 package store
 
 import (
+	"slices"
 	"yoink/models"
 	"yoink/utils/database"
 
@@ -37,6 +38,18 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 			return err
 		}
 		foundTermsMap := make(map[string]models.Term)
+
+		// add sort by id
+		slices.SortFunc(foundTerms, func(a, b models.Term) int {
+			if a.Id < b.Id {
+				return -1
+			}
+			if a.Id > b.Id {
+				return 1
+			}
+			return 0
+		})
+
 		for _, term := range foundTerms{
 			foundTermsMap[term.Word] = term
 		}
@@ -51,7 +64,11 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 		}
 		// BATCH CREATE
 		if len(needToBeCreated) > 0 {
-			if err := db.CreateInBatches(needToBeCreated, 500).Error; err != nil{
+			if err := db.Clauses(
+				clause.OnConflict{
+					DoNothing: true,
+				},
+			).CreateInBatches(needToBeCreated, 500).Error; err != nil{
 				return err
 			}
 		}
