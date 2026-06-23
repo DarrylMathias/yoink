@@ -28,7 +28,7 @@ func Crawler(){
 	// set up periodic logging
 	if env.ConfigValue.Application == "dev"{
 		logging.StartHeartbeat(&myredis.CacheHit, &myredis.CacheMiss)
-		logging.SendHearbeatMail(&myredis.CacheHit, &myredis.CacheMiss)
+		logging.SendHearbeatMailCrawler(&myredis.CacheHit, &myredis.CacheMiss)
 		fmt.Println("Logging and mail services started")
 	}
 

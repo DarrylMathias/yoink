@@ -15,8 +15,7 @@ func Indexer(sqsURL *string) error{
 	}
 
 	if len(messages.Messages) == 0 {
-		fmt.Println("empty sqs queue")
-		return nil
+		return fmt.Errorf("empty sqs queue")
 	}
 	
 	// document processing and words extraction
