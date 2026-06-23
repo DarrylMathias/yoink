@@ -1,8 +1,8 @@
 package indexer
 
 import (
-	// "fmt"
 	"fmt"
+	"yoink/indexer/store"
 	processing "yoink/indexer/word_processing"
 	mysqs "yoink/utils/myaws/sqs"
 )
@@ -31,15 +31,18 @@ func Indexer(sqsURL *string) error{
 	// }()
 	
 	// document processing and words extraction
-	weightedHashMaps, documentLengths, err := processing.Process(messages)
+	indexerOutput, err := processing.Process(messages)
 	if err != nil{
 		return err
 	}
 
 	// db storage
-	fmt.Println("hashmaps", weightedHashMaps)
-	fmt.Println("documentLengths", documentLengths)
-	
+	fmt.Println("indexer output", indexerOutput)
+	err = store.StoreTF_IDF(indexerOutput)
+	if err != nil{
+		return err
+	}
+	fmt.Println("db push success")
 
 
 	return nil

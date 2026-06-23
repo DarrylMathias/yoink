@@ -42,5 +42,6 @@ func NewDatabase(){
 	database.AutoMigrate(&models.Page{})
 	database.AutoMigrate(&models.Posting{})
 	database.AutoMigrate(&models.Term{})
+	database.AutoMigrate(&models.CorpusStatistics{})
 	DB = database
 }

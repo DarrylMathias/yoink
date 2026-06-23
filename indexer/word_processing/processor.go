@@ -3,6 +3,7 @@ package processing
 import (
 	"yoink/indexer/word_processing/extraction"
 	"yoink/indexer/word_processing/tokenizer"
+	"yoink/models"
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 )
@@ -11,30 +12,29 @@ const titleWeight = 5
 const descWeight = 3
 const wordsWeight = 1
 
-func Process(messages *sqs.ReceiveMessageOutput) ([]map[string]int, []int, error){
-	var weightedFreqSlice []map[string]int
-	var documentLengthSlice []int
+func Process(messages *sqs.ReceiveMessageOutput) ([]models.IndexerOutput, error){
+	var output []models.IndexerOutput
 	for _, msg := range messages.Messages{
 		hash := msg.Body
 
 		// extract text from html
 		document, text, err := extraction.ExtractText(hash)
 		if err != nil{
-			return nil, nil, err
+			return nil, err
 		}
 
 		// tokenize and filter
 		title, err := tokenizer.Tokenize(document.Title)
 		if err != nil{
-			return nil, nil, err
+			return nil, err
 		}
 		desc, err := tokenizer.Tokenize(document.Description)
 		if err != nil{
-			return nil, nil, err
+			return nil, err
 		}
 		words, err := tokenizer.Tokenize(text)
 		if err != nil{
-			return nil, nil, err
+			return nil, err
 		}
 
 		// ewighted hash map
@@ -53,8 +53,11 @@ func Process(messages *sqs.ReceiveMessageOutput) ([]map[string]int, []int, error
 			documentLength += 1
 		}
 
-		weightedFreqSlice = append(weightedFreqSlice, weightedFreq)
-		documentLengthSlice = append(documentLengthSlice, documentLength)
+		output = append(output, models.IndexerOutput{
+			Hash: *hash,
+			WeightedFreq: weightedFreq,
+			DocumentLength: documentLength,
+		})
 	}
-	return weightedFreqSlice, documentLengthSlice, nil
+	return output, nil
 }
