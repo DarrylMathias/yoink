@@ -19,16 +19,6 @@ func Indexer(sqsURL *string) error{
 		fmt.Println("empty sqs queue")
 		return nil
 	}
-
-	// we defer this so that if any part fails, the message is deleted from sqs always
-	defer func(){
-		// delete sqs message
-		for _, msg := range messages.Messages{
-			if err := mysqs.DeleteMessage(sqsURL, msg); err != nil{
-				fmt.Println("delete error:", err)
-			}
-		}
-	}()
 	
 	// document processing and words extraction
 	indexerOutput, err := processing.Process(messages)
@@ -44,6 +34,11 @@ func Indexer(sqsURL *string) error{
 	}
 	fmt.Println("db push success")
 
-
+	// delete sqs message
+	for _, msg := range messages.Messages{
+		if err := mysqs.DeleteMessage(sqsURL, msg); err != nil{
+			fmt.Println("delete error:", err)
+		}
+	}
 	return nil
 }
