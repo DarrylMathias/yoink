@@ -31,9 +31,16 @@ func Indexer(sqsURL *string) error{
 	// }()
 	
 	// document processing and words extraction
-	err = processing.Process(messages)
+	weightedHashMaps, documentLengths, err := processing.Process(messages)
 	if err != nil{
 		return err
 	}
+
+	// db storage
+	fmt.Println("hashmaps", weightedHashMaps)
+	fmt.Println("documentLengths", documentLengths)
+	
+
+
 	return nil
 }

@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.44.0
 	github.com/benjaminestes/robots v2.0.4+incompatible
 	github.com/google/uuid v1.6.0
+	github.com/kljensen/snowball v0.10.0
 	github.com/labstack/echo/v5 v5.2.1
 	github.com/redis/go-redis/v9 v9.20.1
 	github.com/resend/resend-go/v3 v3.9.2
