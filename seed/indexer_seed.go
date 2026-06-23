@@ -1,6 +1,7 @@
 package seed
 
 import (
+	"fmt"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -8,6 +9,7 @@ import (
 	"yoink/utils/database"
 	"yoink/utils/env"
 	mysqs "yoink/utils/myaws/sqs"
+	"yoink/utils/resend"
 )
 var i int64
 
@@ -25,18 +27,24 @@ func task(queueURL *string){
 
 		err := db.Limit(500).Offset(offset).Find(&pages).Error   
 		if err != nil{
-			panic(err)
+			fmt.Println(err)
 		}
 		if len(pages) == 0 {
 			return
 		}
+		fmt.Println(
+			"offset:",
+			offset,
+			"rows:",
+			len(pages),
+		)
 
 		var msgs []string
 		for _, page := range pages{
 			msgs = append(msgs, page.Url_hash)
 		}
 		if err := mysqs.SendBatchMessage(queueURL, msgs); err != nil{
-			panic(err)
+			fmt.Println(err)
 		}
 	}
 }
@@ -57,4 +65,5 @@ func IndexerSeed(){
 		wg.Go(func() {task(queueURL)})
 	}
 	wg.Wait()
+	resend.SendEmail("completed push to a million pages sqs", "done indexing")
 }
