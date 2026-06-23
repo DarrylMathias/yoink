@@ -5,7 +5,7 @@ import (
 	"yoink/models"
 	"yoink/utils/database"
 
-	"gorm.io/gorm"
+	// "gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -74,20 +74,20 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 		}
 
 		// BATCH UPDATE (code for stack overflow)
-		values := make([]clause.Expr, 0, len(foundTerms))
-		for _, term := range foundTerms {
-			term.DF++
-			values = append(values, gorm.Expr("(?::bigint, ?::text, ?::integer)", term.Id, term.Word, term.DF))
-		}
-		valuesExpr := gorm.Expr("?", values)
-		valuesExpr.WithoutParentheses = true
-		err = db.Exec(
-			"UPDATE terms SET word = tmp.word, df = tmp.df FROM (VALUES ?) tmp(id, word, df) WHERE terms.id = tmp.id",
-			valuesExpr,
-		).Error
-		if err != nil{
-			return err
-		}
+		// values := make([]clause.Expr, 0, len(foundTerms))
+		// for _, term := range foundTerms {
+		// 	term.DF++
+		// 	values = append(values, gorm.Expr("(?::bigint, ?::text, ?::integer)", term.Id, term.Word, term.DF))
+		// }
+		// valuesExpr := gorm.Expr("?", values)
+		// valuesExpr.WithoutParentheses = true
+		// err = db.Exec(
+		// 	"UPDATE terms SET word = tmp.word, df = tmp.df FROM (VALUES ?) tmp(id, word, df) WHERE terms.id = tmp.id",
+		// 	valuesExpr,
+		// ).Error
+		// if err != nil{
+		// 	return err
+		// }
 
 		// now postings table
 		var allTerms []models.Term
