@@ -16,7 +16,6 @@ func Indexer(sqsURL *string) error{
 	if err != nil{
 		return err
 	}
-
 	if len(messages.Messages) == 0 {
 		return ErrEmptyQueue
 	}
@@ -28,12 +27,10 @@ func Indexer(sqsURL *string) error{
 	}
 
 	// db storage
-	fmt.Println("indexer output", indexerOutput)
 	err = store.StoreTF_IDF(indexerOutput)
 	if err != nil{
 		return err
 	}
-	fmt.Println("db push success")
 
 	// delete sqs message
 	for _, msg := range messages.Messages{

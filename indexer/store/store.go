@@ -1,7 +1,6 @@
 package store
 
 import (
-	"fmt"
 	"yoink/models"
 	"yoink/utils/database"
 
@@ -16,7 +15,6 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 
 		// document table insertion
 		document := new(models.Page)
-		fmt.Println("op", op)
 		err := db.Where("url_hash = ?", op.Hash).First(document).Error
 		if err != nil{
 			return err

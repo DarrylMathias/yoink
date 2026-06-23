@@ -30,17 +30,21 @@ func main() {
 	}
 	
 	// set up periodic logging
-	if env.ConfigValue.Application == "dev"{
-		logging.StartHeartbeatIndexer()
-		logging.SendHearbeatMailIndexer()
-		fmt.Println("Logging and mail services started")
-	}
+	logging.StartHeartbeatIndexer()
+	logging.SendHearbeatMailIndexer()
+	fmt.Println("Logging and mail services started")
 
 	workers, err := strconv.Atoi(env.ConfigValue.Workers)
 	if err != nil{
 		panic(err)
 	}
 	var wg sync.WaitGroup
+
+	// queue monitor setup
+	if err := mysqs.GetNoOfMessages(sqsUrl); err != nil{
+		panic(fmt.Errorf("error in getting messages in queue --- %s", err.Error()))
+	}
+	mysqs.StartQueueMonitor(sqsUrl)
 
 	t1 := time.Now().UnixMilli()
 	for w:=0; w<workers; w++{

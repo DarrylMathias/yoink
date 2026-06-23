@@ -17,16 +17,16 @@ import (
 // set to true when the aim is to have a million messages in sqs, and false after that stage
 var IsDiscovering bool = true
 
-func Crawler(){
+func Crawler() {
 	// fetch crawler queue url
 	sqsUrl, err := mysqs.GetQueueURL(env.EnvValue.CrawlerSqsName)
-	if err != nil{
+	if err != nil {
 		fmt.Printf("error in fetching queue url --- %s", err.Error())
 		return
 	}
 
 	// set up periodic logging
-	if env.ConfigValue.Application == "dev"{
+	if env.ConfigValue.Application == "dev" {
 		logging.StartHeartbeat(&myredis.CacheHit, &myredis.CacheMiss)
 		logging.SendHearbeatMailCrawler(&myredis.CacheHit, &myredis.CacheMiss)
 		fmt.Println("Logging and mail services started")
@@ -34,19 +34,19 @@ func Crawler(){
 
 	// initialize config values
 	Workers, err := strconv.Atoi(env.ConfigValue.Workers)
-	if err != nil{
+	if err != nil {
 		fmt.Println("cant convert workers to int")
 		return
 	}
 	NoOfSQSMessages, err := strconv.Atoi(env.ConfigValue.NoOfSQSMessages)
-	if err != nil{
+	if err != nil {
 		fmt.Println("cant convert no of sqs messages to int")
 		return
 	}
 	var wg sync.WaitGroup
 
 	// queue monitor setup
-	if err := mysqs.GetNoOfMessages(sqsUrl); err != nil{
+	if err := mysqs.GetNoOfMessages(sqsUrl); err != nil {
 		panic(fmt.Errorf("error in getting messages in queue --- %s", err.Error()))
 	}
 	mysqs.StartQueueMonitor(sqsUrl)
@@ -59,12 +59,12 @@ func Crawler(){
 				if IsDiscovering && atomic.LoadInt64(&mysqs.NoOfSQSMessages) >= int64(NoOfSQSMessages) {
 					return
 				}
-				if atomic.LoadInt64(&mysqs.NoOfSQSMessages ) <= 0{
+				if atomic.LoadInt64(&mysqs.NoOfSQSMessages) <= 0 {
 					fmt.Println("empty sqs")
 					return
 				}
 				t1 := time.Now().UnixMilli()
-				if err := crawler.Crawl(IsDiscovering, sqsUrl); err != nil{
+				if err := crawler.Crawl(IsDiscovering, sqsUrl); err != nil {
 					fmt.Println("error in main.go => ", err)
 					continue
 				}
@@ -90,7 +90,7 @@ func Crawler(){
 		cache misses:%d,
 		workers:%d,
 		runtime:%d,
-		`, 	atomic.LoadInt64(&mysqs.NoOfSQSMessages),
+		`, atomic.LoadInt64(&mysqs.NoOfSQSMessages),
 			atomic.LoadInt64(&myredis.CacheHit),
 			atomic.LoadInt64(&myredis.CacheMiss),
 			Workers,
