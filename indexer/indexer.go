@@ -21,14 +21,14 @@ func Indexer(sqsURL *string) error{
 	}
 
 	// we defer this so that if any part fails, the message is deleted from sqs always
-	// defer func(){
-	// 	// delete sqs message
-	// 	for _, msg := range messages.Messages{
-	// 		if err := mysqs.DeleteMessage(sqsURL, msg); err != nil{
-	// 			fmt.Println("delete error:", err)
-	// 		}
-	// 	}
-	// }()
+	defer func(){
+		// delete sqs message
+		for _, msg := range messages.Messages{
+			if err := mysqs.DeleteMessage(sqsURL, msg); err != nil{
+				fmt.Println("delete error:", err)
+			}
+		}
+	}()
 	
 	// document processing and words extraction
 	indexerOutput, err := processing.Process(messages)
