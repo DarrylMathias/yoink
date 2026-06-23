@@ -44,10 +44,6 @@ func main() {
 
 	t1 := time.Now().UnixMilli()
 	for w:=0; w<workers; w++{
-		if atomic.LoadInt64(&mysqs.NoOfSQSMessages ) <= 0{
-			fmt.Println("empty sqs")
-			return
-		}
 		fmt.Println("started worker", w+1)
 		wg.Go(func() {
 			for{
@@ -55,8 +51,10 @@ func main() {
 				if errors.Is(err, indexer.ErrEmptyQueue){
 					return
 				}
-				fmt.Println("indexer error:", err)
-				continue
+				if err != nil{
+					fmt.Println("indexer error:", err)
+					continue
+				}
 			}
 		})
 	}
