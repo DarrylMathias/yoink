@@ -97,7 +97,11 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 
 		// batch insert postings
 		if len(postings) > 0 {
-			if err := db.CreateInBatches(postings, 500).Error; err != nil{
+			if err := db.Clauses(
+				clause.OnConflict{
+					DoNothing: true,
+				},
+			).CreateInBatches(postings, 500).Error; err != nil{
 				return err
 			}
 		}

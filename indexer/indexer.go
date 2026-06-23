@@ -1,11 +1,14 @@
 package indexer
 
 import (
+	"errors"
 	"fmt"
 	"yoink/indexer/store"
 	processing "yoink/indexer/word_processing"
 	mysqs "yoink/utils/myaws/sqs"
 )
+
+var ErrEmptyQueue = errors.New("empty queue")
 
 func Indexer(sqsURL *string) error{
 	// receive message from sqs
@@ -15,7 +18,7 @@ func Indexer(sqsURL *string) error{
 	}
 
 	if len(messages.Messages) == 0 {
-		return fmt.Errorf("empty sqs queue")
+		return ErrEmptyQueue
 	}
 	
 	// document processing and words extraction

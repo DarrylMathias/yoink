@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"sync"
@@ -50,9 +51,12 @@ func main() {
 		fmt.Println("started worker", w+1)
 		wg.Go(func() {
 			for{
-				if err := indexer.Indexer(sqsUrl); err != nil{
-					panic(err)
+				err := indexer.Indexer(sqsUrl)
+				if errors.Is(err, indexer.ErrEmptyQueue){
+					return
 				}
+				fmt.Println("indexer error:", err)
+				continue
 			}
 		})
 	}
@@ -68,7 +72,7 @@ func main() {
 		runtime:%d mins,
 		`, 	atomic.LoadInt64(&mysqs.NoOfSQSMessages),
 			workers,
-			(t2-t1)/1000*60,
+			(t2-t1)/(1000*60),
 		),
 		"COMPLETED EC2 INDEXING",
 	)
