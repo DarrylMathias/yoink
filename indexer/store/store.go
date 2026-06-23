@@ -62,7 +62,7 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 		values := make([]clause.Expr, 0, len(foundTerms))
 		for _, term := range foundTerms {
 			term.DF++
-			values = append(values, gorm.Expr("(?, ?, ?)", term.Id, term.Word, term.DF))
+			values = append(values, gorm.Expr("(?::bigint, ?::text, ?::integer)", term.Id, term.Word, term.DF))
 		}
 		valuesExpr := gorm.Expr("?", values)
 		valuesExpr.WithoutParentheses = true
