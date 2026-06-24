@@ -7,3 +7,4 @@ todo*
 *.pem
 *.rdb
 yoink
+/test

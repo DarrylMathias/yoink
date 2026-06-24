@@ -1,69 +1,74 @@
 package seed
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"sync"
 	"sync/atomic"
-	"yoink/models"
-	"yoink/utils/database"
+	"time"
+	"yoink/indexer"
 	"yoink/utils/env"
+	"yoink/utils/logging"
 	mysqs "yoink/utils/myaws/sqs"
 	"yoink/utils/resend"
 )
-var i int64
-
-const noOfPagesInDB = 1_043_092
-
-func task(queueURL *string){
-	db := database.DB
-
-	for {
-		offset := int(atomic.AddInt64(&i, 500) - 500)
-		var pages []models.Page
-		if offset >= noOfPagesInDB {
-			return
-		}
-
-		err := db.Limit(500).Offset(offset).Find(&pages).Error   
-		if err != nil{
-			fmt.Println(err)
-		}
-		if len(pages) == 0 {
-			return
-		}
-		fmt.Println(
-			"offset:",
-			offset,
-			"rows:",
-			len(pages),
-		)
-
-		var msgs []string
-		for _, page := range pages{
-			msgs = append(msgs, page.Url_hash)
-		}
-		if err := mysqs.SendBatchMessage(queueURL, msgs); err != nil{
-			fmt.Println(err)
-		}
-	}
-}
 
 func IndexerSeed(){
-	atomic.StoreInt64(&i, 0)
+	// fetch crawler queue url
+	sqsUrl, err := mysqs.GetQueueURL(env.EnvValue.IndexerSqsName)
+	if err != nil{
+		fmt.Printf("error in fetching queue url --- %s", err.Error())
+		return
+	}
+	
+	// set up periodic logging
+	logging.StartHeartbeatIndexer()
+	logging.SendHearbeatMailIndexer()
+	fmt.Println("Logging and mail services started")
+
 	workers, err := strconv.Atoi(env.ConfigValue.Workers)
 	if err != nil{
 		panic(err)
 	}
-	queueURL, err := mysqs.GetQueueURL(env.EnvValue.IndexerSqsName)
-	if err != nil{
-		panic(err)
-	}
-
 	var wg sync.WaitGroup
-	for w:=0; w<workers; w++{
-		wg.Go(func() {task(queueURL)})
+
+	// queue monitor setup
+	if err := mysqs.GetNoOfMessages(sqsUrl); err != nil{
+		panic(fmt.Errorf("error in getting messages in queue --- %s", err.Error()))
 	}
+	mysqs.StartQueueMonitor(sqsUrl)
+
+	t1 := time.Now().UnixMilli()
+	for w:=0; w<workers; w++{
+		fmt.Println("started worker", w+1)
+		wg.Go(func() {
+			for{
+				err := indexer.Indexer(sqsUrl)
+				if errors.Is(err, indexer.ErrEmptyQueue){
+					return
+				}
+				if err != nil{
+					fmt.Println("indexer error:", err)
+					continue
+				}
+			}
+		})
+	}
+	t2 := time.Now().UnixMilli()
 	wg.Wait()
-	resend.SendEmail("completed push to a million pages sqs", "done indexing")
+	
+	// summary mail
+	resend.SendEmail(
+		fmt.Sprintf(`
+		====== SUMMARY ======
+		urls discovered: %d,
+		workers:%d,
+		runtime:%d mins,
+		`, 	atomic.LoadInt64(&mysqs.NoOfSQSMessages),
+			workers,
+			(t2-t1)/(1000*60),
+		),
+		"COMPLETED EC2 INDEXING",
+	)
 }

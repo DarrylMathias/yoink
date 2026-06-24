@@ -1,19 +1,31 @@
 package store
 
 import (
-	"slices"
+	"encoding/binary"
+	"encoding/json"
+	"fmt"
+	"os"
+	"sync"
+
 	"yoink/models"
 	"yoink/utils/database"
-
-	// "gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
-// massively optimized it from O(n^2) to O(n) bringing db operations from 4 billion to 4 million for a million corpus
+var offset int64 = 0
+var i int64 = 0
+var segmentId int64 = 0
+var posting map[string][]models.Posting
+var lexicon map[string]models.Lexicon
+var mu sync.Mutex
+
 func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 	var db = database.DB
-	for _, op := range indexerOutput{
 
+	posting = make(map[string][]models.Posting)
+	lexicon = make(map[string]models.Lexicon)
+
+	for _, op := range indexerOutput{
+		fmt.Println("op", op)
 		// document table insertion
 		document := new(models.Page)
 		err := db.Where("url_hash = ?", op.Hash).First(document).Error
@@ -24,106 +36,73 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 		if err := db.Save(document).Error; err != nil {
 			return err
 		}
+		fmt.Println("doc insertion success")
 
-		// collect all words
-		var words []string
-		for key := range op.WeightedFreq{
-			words = append(words, key)
-		}
-		
-		// batch check existence of words (basically BATCH GET)
-		var foundTerms []models.Term
-		err = db.Where("word IN ?", words).Find(&foundTerms).Error
-		if err != nil{
-			return err
-		}
-		foundTermsMap := make(map[string]models.Term)
+		// posting storage in memory
+		for word, freq := range op.WeightedFreq {
+			mu.Lock()
 
-		// add sort by id
-		slices.SortFunc(foundTerms, func(a, b models.Term) int {
-			if a.Id < b.Id {
-				return -1
-			}
-			if a.Id > b.Id {
-				return 1
-			}
-			return 0
-		})
-
-		for _, term := range foundTerms{
-			foundTermsMap[term.Word] = term
-		}
-
-		// find terms that need to be created then
-		var needToBeCreated []models.Term
-		for _, word  := range words {
-			_, exists := foundTermsMap[word]
-			if !exists{
-				needToBeCreated = append(needToBeCreated, models.Term{Word: word, DF: 1})
-			}
-		}
-		// BATCH CREATE
-		if len(needToBeCreated) > 0 {
-			if err := db.Clauses(
-				clause.OnConflict{
-					DoNothing: true,
-				},
-			).CreateInBatches(needToBeCreated, 500).Error; err != nil{
-				return err
-			}
-		}
-
-		// BATCH UPDATE (code for stack overflow)
-		// values := make([]clause.Expr, 0, len(foundTerms))
-		// for _, term := range foundTerms {
-		// 	term.DF++
-		// 	values = append(values, gorm.Expr("(?::bigint, ?::text, ?::integer)", term.Id, term.Word, term.DF))
-		// }
-		// valuesExpr := gorm.Expr("?", values)
-		// valuesExpr.WithoutParentheses = true
-		// err = db.Exec(
-		// 	"UPDATE terms SET word = tmp.word, df = tmp.df FROM (VALUES ?) tmp(id, word, df) WHERE terms.id = tmp.id",
-		// 	valuesExpr,
-		// ).Error
-		// if err != nil{
-		// 	return err
-		// }
-
-		// now postings table
-		var allTerms []models.Term
-		err = db.Where("word IN ?", words).Find(&allTerms).Error
-		if err != nil{
-			return err
-		}
-		termMap := make(map[string]models.Term)
-		for _, term := range allTerms{
-			termMap[term.Word] = term
-		}
-
-		var postings []models.Posting
-		for word, value := range op.WeightedFreq{
-			term := termMap[word]
-			postings = append(postings, models.Posting{
+			newPosting := models.Posting{
 				PageId: document.Id,
-				TermId: term.Id,
-				TF: int32(value),
-			})
+				TF: int32(freq),
+			}
+			_, exists := posting[word]
+			if !exists{
+				posting[word] = []models.Posting{newPosting}
+			}else{
+				posting[word] = append(posting[word], newPosting)
+			}
+			
+			mu.Unlock()
 		}
+		i++
 
-		// batch insert postings
-		if len(postings) > 0 {
-			if err := db.Clauses(
-				clause.OnConflict{
-					DoNothing: true,
-				},
-			).CreateInBatches(postings, 500).Error; err != nil{
+		// check 10k for new segment
+		if i >= 100{
+			mu.Lock()
+			// Create the posting file
+			file, err := os.Create(fmt.Sprintf("test/posting%d.bin", segmentId))
+			if err != nil {
 				return err
 			}
-		}
+			defer file.Close()
 
-		if err := ComputeStatistics(db, float32(document.Document_length)); err != nil {
-			return err
+			// Write the struct to the file
+			for word, post := range posting{
+				err = binary.Write(file, binary.LittleEndian, post)
+				if err != nil {
+					return err
+				}
+				// lexicon computation
+				length := int64(len(post) * binary.Size(models.Posting{}))
+				lexicon[word] = models.Lexicon{
+					Offset: offset,
+					Length: length,
+				}
+				offset += length
+			}
+
+			// lexicon stored to lexicon file
+			jsonData, err := json.Marshal(lexicon)
+			if err != nil {
+				return err
+			}
+			// Write JSON bytes to a file
+			err = os.WriteFile(fmt.Sprintf("test/lexicon%d.json", segmentId), jsonData, 0644)
+			if err != nil {
+				return err
+			}
+
+			// re-initiailizations
+			offset = 0
+			i = 0
+			posting = map[string][]models.Posting{}
+			lexicon = map[string]models.Lexicon{}
+			fmt.Println("disk storage")
+			segmentId++
+			mu.Unlock()
 		}
+		ComputeStatistics(db, float32(op.DocumentLength))
 	}
 	return nil
 }

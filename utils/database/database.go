@@ -40,8 +40,6 @@ func NewDatabase(){
 		fmt.Println("RDS connection success")
 	}
 	database.AutoMigrate(&models.Page{})
-	database.AutoMigrate(&models.Posting{})
-	database.AutoMigrate(&models.Term{})
 	database.AutoMigrate(&models.CorpusStatistics{})
 	DB = database
 }

@@ -26,7 +26,7 @@ func Indexer(sqsURL *string) error{
 		return err
 	}
 
-	// db storage
+	// indexer storage
 	err = store.StoreTF_IDF(indexerOutput)
 	if err != nil{
 		return err

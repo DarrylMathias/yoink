@@ -30,7 +30,7 @@ func Tokenize(text string) ([]string, error) {
 }
 
 func RemoveStopWords(text []string) ([]string){
-	stopWords := []string{"a", "an", "also", "and", "are", "as", "at", "be", "because", "been", "but", "by", "for", "from", "have", "has", "however", "if", "not", "of", "on", "or", "so", "than", "that", "the", "their", "there", "these", "this", "was", "were", "whatever", "whether", "which", "with", "would", }
+	stopWords := []string{"a", "an", "also", "and", "are", "as", "at", "be", "because", "been", "but", "by", "for", "from", "have", "has", "however", "is", "it", "if", "not", "of", "on", "or", "so", "than", "that", "the", "their", "there", "these", "this", "was", "were", "whatever", "whether", "which", "with", "would", }
 
 	filteredText := slices.DeleteFunc(text, func(word string) bool {
 		return slices.Contains(stopWords, word)
