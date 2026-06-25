@@ -13,7 +13,7 @@ import (
 )
 var i int64
 
-const noOfPagesInDB = 30_000
+const noOfPagesInDB = 10_000
 
 func task(queueURL *string){
 	db := database.DB

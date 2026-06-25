@@ -10,13 +10,13 @@ import (
 
 func StoreInDisk(offset *int64, i *int64, segmentId *int64, posting *map[string][]models.Posting, lexicon *map[string]models.Lexicon) error{
 	// ensure directory exists
-	err := os.MkdirAll("indexer_data", 0755)
+	err := os.MkdirAll("/home/ubuntu/indexer_data", 0755)
 	if err != nil {
 		return err
 	}
 
 	// Create the posting file
-	file, err := os.Create(fmt.Sprintf("indexer_data/posting%d.bin", *segmentId))
+	file, err := os.Create(fmt.Sprintf("/home/ubuntu/indexer_data/posting%d.bin", *segmentId))
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func StoreInDisk(offset *int64, i *int64, segmentId *int64, posting *map[string]
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(fmt.Sprintf("indexer_data/lexicon%d.json", *segmentId), jsonData, 0644)
+	err = os.WriteFile(fmt.Sprintf("/home/ubuntu/indexer_data/lexicon%d.json", *segmentId), jsonData, 0644)
 	if err != nil {
 		return err
 	}

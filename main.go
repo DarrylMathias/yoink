@@ -9,6 +9,6 @@ func main() {
     app.App()
 	// seed.SeedSQS()
 	// seed.Crawler()
-	// seed.IndexerSeedSQS()
+	seed.IndexerSeedSQS()
 	seed.IndexerSeed()
 }
