@@ -23,24 +23,25 @@ var lexicon map[string]models.Lexicon
 // mutex for mutual exclusion
 var mu sync.Mutex
 
-func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
-	
-	// reinitializing them to avoid nil pointer dereferencing 
+func Init() {
+	// reinitialzing them to avoid nil pointer dereferencing
 	posting = make(map[string][]models.Posting)
 	lexicon = make(map[string]models.Lexicon)
+}
 
+func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 	for _, op := range indexerOutput{
 		// document length insertion
 		document, err := database.InsertDocLength(&op)
 		if err != nil{
 			return err
 		}
-		fmt.Printf("doc %d insertion success\n", i)
 
+		// mutex to avoid race conditions
+		mu.Lock()
+		
 		// insert posting in memory
 		for word, freq := range op.WeightedFreq {
-			mu.Lock()
-
 			newPosting := models.Posting{
 				PageId: document.Id,
 				TF: int32(freq),
@@ -51,27 +52,30 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 			}else{
 				posting[word] = append(posting[word], newPosting)
 			}
-
-			mu.Unlock()
 		}
+		
 		i++
+		fmt.Printf("doc %d insertion success\n", i)
 
 		// check every threshold for new segment which is to pushed to the disk
 		threshold, err := strconv.Atoi(env.ConfigValue.PostingThreshold)
 		if err != nil{
+			mu.Unlock()
 			return err
 		}
 
 		if i >= int64(threshold){
-			mu.Lock()
-
 			err := disk.StoreInDisk(&offset, &i, &segmentId, &posting, &lexicon)
 			if err != nil{
+				mu.Unlock()
 				return err
 			}
-
-			mu.Unlock()
+			// reinitialize maps after successful push to disk
+			posting = make(map[string][]models.Posting)
+			lexicon = make(map[string]models.Lexicon)
 		}
+
+		mu.Unlock()
 
 		database.ComputeStatistics(float32(op.DocumentLength))
 	}

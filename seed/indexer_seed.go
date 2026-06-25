@@ -7,6 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"yoink/indexer/store"
 	"yoink/indexer"
 	"yoink/utils/env"
 	"yoink/utils/logging"
@@ -44,6 +45,7 @@ func IndexerSeed(){
 		fmt.Println("started worker", w+1)
 		wg.Go(func() {
 			for{
+				store.Init()
 				err := indexer.Indexer(sqsUrl)
 				if errors.Is(err, indexer.ErrEmptyQueue){
 					fmt.Println("worker exiting: empty queue")

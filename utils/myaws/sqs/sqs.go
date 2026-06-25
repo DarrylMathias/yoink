@@ -38,6 +38,7 @@ func ReceiveMessage(queueURL *string) (*sqs.ReceiveMessageOutput, error){
 		QueueUrl: queueURL,
 		MaxNumberOfMessages: 10,
 		WaitTimeSeconds: 20,
+		VisibilityTimeout: int32(300), // 5 minutes
 	}
 	message, err := SqsClient.ReceiveMessage(context.Background(), config)
 	return message, err

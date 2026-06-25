@@ -46,8 +46,6 @@ func StoreInDisk(offset *int64, i *int64, segmentId *int64, posting *map[string]
 	// re-initiailizations
 	*offset = 0
 	*i = 0
-	posting = &map[string][]models.Posting{}
-	lexicon = &map[string]models.Lexicon{}
 	fmt.Println("synced to disk, segmenId:", *segmentId)
 	*segmentId++
 	
