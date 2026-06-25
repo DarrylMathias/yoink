@@ -3,34 +3,48 @@ package database
 import (
 	"yoink/models"
 	"yoink/utils/database"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
-func ComputeStatistics(documentLength float32) error {
+func ComputeStatisticsBatch(totalDocumentLength float32, count int) error {
 	var db = database.DB
-	// update stats
+	// made compute statistics batch now
 	return db.Exec(`
 		UPDATE corpus_statistics
 		SET
 			average_doc_length =
 				((average_doc_length * total_documents) + ?)
-				/ (total_documents + 1),
-			total_documents = total_documents + 1
+				/ (total_documents + ?),
+			total_documents = total_documents + ?
 		WHERE id = 1
-	`, documentLength).Error
+	`, totalDocumentLength, count, count).Error
 }
 
-func InsertDocLength(op *models.IndexerOutput) (*models.Page, error) {
-		var db = database.DB
+func GetPageIds(hashes []string) (map[string]uuid.UUID, error) {
+	var pages []models.Page
+	db := database.DB
+	
+	err := db.Select("id, url_hash").Where("url_hash IN ?", hashes).Find(&pages).Error
+	if err != nil {
+		return nil, err
+	}
+	pageMap := make(map[string]uuid.UUID)
+	for _, p := range pages {
+		pageMap[p.Url_hash] = p.Id
+	}
+	return pageMap, nil
+}
 
-		// document table insertion
-		document := new(models.Page)
-		err := db.Where("url_hash = ?", op.Hash).First(document).Error
-		if err != nil{
-			return nil, err
+func UpdateDocLengths(docLengths map[string]int32) error {
+	var db = database.DB
+	return db.Transaction(func(tx *gorm.DB) error {
+		for hash, length := range docLengths {
+			if err := tx.Model(&models.Page{}).Where("url_hash = ?", hash).Update("document_length", length).Error; err != nil {
+				return err
+			}
 		}
-		document.Document_length = int32(op.DocumentLength)
-		if err := db.Save(document).Error; err != nil {
-			return nil, err
-		}
-		return document, nil
+		return nil
+	})
 }

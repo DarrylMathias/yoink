@@ -30,55 +30,79 @@ func Init() {
 }
 
 func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
-	for _, op := range indexerOutput{
-		// document length insertion
-		document, err := database.InsertDocLength(&op)
-		if err != nil{
-			return err
-		}
+	var totalDocLength float32
+	var count int
+	
+	// fetch all hashes
+	var hashes []string
+	for _, op := range indexerOutput {
+		hashes = append(hashes, op.Hash)
+	}
 
-		// mutex to avoid race conditions
-		mu.Lock()
-		
+	// get id from hash
+	pageMap, err := database.GetPageIds(hashes)
+	if err != nil {
+		return err
+	}
+
+	// perform memory posting insertions
+	mu.Lock()
+	for _, op := range indexerOutput{
+		pageId, exists := pageMap[op.Hash]
+		if !exists {
+			continue
+		}
 		// insert posting in memory
 		for word, freq := range op.WeightedFreq {
 			newPosting := models.Posting{
-				PageId: document.Id,
+				PageId: pageId,
 				TF: int32(freq),
 			}
-			_, exists := posting[word]
-			if !exists{
-				posting[word] = []models.Posting{newPosting}
-			}else{
-				posting[word] = append(posting[word], newPosting)
-			}
+			posting[word] = append(posting[word], newPosting)
 		}
 		
 		i++
 		fmt.Printf("doc %d insertion success\n", i)
+		
+		totalDocLength += float32(op.DocumentLength)
+		count++
+	}
 
-		// check every threshold for new segment which is to pushed to the disk
-		threshold, err := strconv.Atoi(env.ConfigValue.PostingThreshold)
+	// check every threshold for new segment which is to pushed to the disk
+	threshold, err := strconv.Atoi(env.ConfigValue.PostingThreshold)
+	if err != nil{
+		mu.Unlock()
+		return err
+	}
+
+	if i >= int64(threshold){
+		err := disk.StoreInDisk(&offset, &i, &segmentId, &posting, &lexicon)
 		if err != nil{
 			mu.Unlock()
 			return err
 		}
-
-		if i >= int64(threshold){
-			err := disk.StoreInDisk(&offset, &i, &segmentId, &posting, &lexicon)
-			if err != nil{
-				mu.Unlock()
-				return err
-			}
-			// reinitialize maps after successful push to disk
-			posting = make(map[string][]models.Posting)
-			lexicon = make(map[string]models.Lexicon)
-		}
-
-		mu.Unlock()
-
-		database.ComputeStatistics(float32(op.DocumentLength))
+		// reinitialize maps after successful push to disk
+		posting = make(map[string][]models.Posting)
+		lexicon = make(map[string]models.Lexicon)
 	}
+
+	mu.Unlock()
+
+	// update all document lengths in DB
+	docLengths := make(map[string]int32)
+	for _, op := range indexerOutput {
+		docLengths[op.Hash] = int32(op.DocumentLength)
+	}
+	if err := database.UpdateDocLengths(docLengths); err != nil {
+		fmt.Printf("failed to update doc lengths: %v\n", err)
+	}
+
+	if count > 0 {
+		if err := database.ComputeStatisticsBatch(totalDocLength, count); err != nil {
+			fmt.Printf("failed to compute statistics: %v\n", err)
+		}
+	}
+
 	return nil
 }
 
