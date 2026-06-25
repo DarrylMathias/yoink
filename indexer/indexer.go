@@ -37,6 +37,7 @@ func Indexer(sqsURL *string) error{
 		if err := mysqs.DeleteMessage(sqsURL, msg); err != nil{
 			fmt.Println("delete error:", err)
 		}
+		fmt.Println("deleted sqs message")
 	}
 	return nil
 }

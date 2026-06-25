@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"yoink/models"
 	"yoink/utils/database"
 )
@@ -33,6 +32,5 @@ func InsertDocLength(op *models.IndexerOutput) (*models.Page, error) {
 		if err := db.Save(document).Error; err != nil {
 			return nil, err
 		}
-		fmt.Println("doc insertion success")
 		return document, nil
 }

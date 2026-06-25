@@ -46,6 +46,7 @@ func IndexerSeed(){
 			for{
 				err := indexer.Indexer(sqsUrl)
 				if errors.Is(err, indexer.ErrEmptyQueue){
+					fmt.Println("worker exiting: empty queue")
 					return
 				}
 				if err != nil{
@@ -55,8 +56,8 @@ func IndexerSeed(){
 			}
 		})
 	}
-	t2 := time.Now().UnixMilli()
 	wg.Wait()
+	t2 := time.Now().UnixMilli()
 	
 	// summary mail
 	resend.SendEmail(

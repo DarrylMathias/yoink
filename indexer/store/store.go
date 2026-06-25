@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"strconv"
 	"sync"
 
@@ -34,6 +35,7 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 		if err != nil{
 			return err
 		}
+		fmt.Printf("doc %d insertion success\n", i)
 
 		// insert posting in memory
 		for word, freq := range op.WeightedFreq {
