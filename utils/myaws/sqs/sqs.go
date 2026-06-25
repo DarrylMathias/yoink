@@ -114,6 +114,38 @@ func DeleteMessage(queueURL *string, input types.Message) error{
 	return err
 }
 
+func DeleteBatchMessages(queueURL *string, msgs []types.Message) error {
+	// chunking since aws allows only 10 msgs per batch
+	for i := 0; i < len(msgs); i += 10 {
+		end := i + 10
+		if end > len(msgs) {
+			end = len(msgs)
+		}
+
+		entries := make([]types.DeleteMessageBatchRequestEntry, 0, end-i)
+		for j, msg := range msgs[i:end] {
+			entries = append(entries,
+				types.DeleteMessageBatchRequestEntry{
+					Id:            aws.String(strconv.Itoa(j)),
+					ReceiptHandle: msg.ReceiptHandle,
+				},
+			)
+		}
+
+		_, err := SqsClient.DeleteMessageBatch(
+			context.Background(),
+			&sqs.DeleteMessageBatchInput{
+				QueueUrl: queueURL,
+				Entries:  entries,
+			},
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func GetQueueURL(queueURL string) (*string ,error){
 	config := &sqs.GetQueueUrlInput{	
 		QueueName: aws.String(queueURL),

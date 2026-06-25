@@ -32,12 +32,13 @@ func Indexer(sqsURL *string) error{
 		return err
 	}
 
-	// delete sqs message
-	for _, msg := range messages.Messages{
-		if err := mysqs.DeleteMessage(sqsURL, msg); err != nil{
-			fmt.Println("delete error:", err)
+	// delete sqs messages
+	if len(messages.Messages) > 0 {
+		if err := mysqs.DeleteBatchMessages(sqsURL, messages.Messages); err != nil{
+			fmt.Println("delete batch error:", err)
+		} else {
+			fmt.Printf("deleted %d sqs messages\n", len(messages.Messages))
 		}
-		fmt.Println("deleted sqs message")
 	}
 	return nil
 }

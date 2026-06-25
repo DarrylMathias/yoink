@@ -5,8 +5,6 @@ import (
 	"math/rand/v2"
 	"yoink/utils/env"
 	mysqs "yoink/utils/myaws/sqs"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
 // creating a seed url list out of all famous llms lol for additional diversity
@@ -483,11 +481,9 @@ func SeedSQS(){
 		return
 	}
 
-	for i, url := range SeedURLs{
-		output, err := mysqs.SendMessage(sqsUrl, url)
-		if err != nil{
-			panic(fmt.Errorf("error in sqs send message --- %s", err.Error()))
-		}
-		fmt.Printf("success - url %d: %v\n", i+1, aws.ToString(output.MD5OfMessageBody))
+	err = mysqs.SendBatchMessage(sqsUrl, SeedURLs)
+	if err != nil{
+		panic(fmt.Errorf("error in sqs send batch message --- %s", err.Error()))
 	}
+	fmt.Printf("successfully seeded %d urls\n", len(SeedURLs))
 }
