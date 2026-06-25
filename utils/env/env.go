@@ -36,6 +36,7 @@ type Config struct{
 	ApplicationPort string `mapstructure:"APPLICATION_PORT"`
 	Workers string `mapstructure:"WORKERS"`
 	NoOfSQSMessages string `mapstructure:"NO_OF_SQS_MESSAGES"`
+	PostingThreshold string `mapstructure:"POSTING_THRESHOLD"`
 }
 
 var EnvValue *Env
