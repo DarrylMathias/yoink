@@ -23,12 +23,19 @@ func StartHeartbeat(hit *int64, miss *int64) {
 	}()
 }
 
-func StartHeartbeatIndexer() {
+func StartHeartbeatIndexer(indexedPages *int64) {
 	go func() {
+		var lastIndexed int64 = 0
 		for {
+			currentIndexed := atomic.LoadInt64(indexedPages)
+			throughput := currentIndexed - lastIndexed
+			lastIndexed = currentIndexed
+
 			fmt.Printf(
-				"[HEARTBEAT] frontier=%d\n",
+				"[HEARTBEAT] messages in queue=%d | indexed (total)=%d | throughput=%d pages/min\n",
 				atomic.LoadInt64(&mysqs.NoOfSQSMessages),
+				currentIndexed,
+				throughput,
 			)
 
 			time.Sleep(time.Minute)
@@ -60,15 +67,22 @@ func SendHearbeatMailCrawler(hit *int64, miss *int64) {
 	}()
 }
 
-func SendHearbeatMailIndexer() {
+func SendHearbeatMailIndexer(indexedPages *int64) {
 	go func() {
+		var lastIndexed int64 = 0
 		for {
+			currentIndexed := atomic.LoadInt64(indexedPages)
+			throughput := currentIndexed - lastIndexed
+			lastIndexed = currentIndexed
+
 			err, mailId := resend.SendEmail(
 				fmt.Sprintf(
-					"[HEARTBEAT] messages in queue=%d\n",
+					"[HEARTBEAT] messages in queue=%d | indexed (total)=%d | avg throughput=%d pages/min (last 1hr)\n",
 					atomic.LoadInt64(&mysqs.NoOfSQSMessages),
+					currentIndexed,
+					throughput/60,
 				),
-				"Crawling updates",
+				"Indexing updates",
 			)
 
 			if err != nil {
@@ -77,7 +91,7 @@ func SendHearbeatMailIndexer() {
 				fmt.Printf("heartbeat mail sent: %s\n", mailId)
 			}
 
-			time.Sleep(3 * time.Hour)
+			time.Sleep(1 * time.Hour)
 		}
 	}()
 }

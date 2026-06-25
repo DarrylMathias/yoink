@@ -23,9 +23,11 @@ func IndexerSeed(){
 		return
 	}
 	
+	var indexedPages int64
+
 	// set up periodic logging
-	logging.StartHeartbeatIndexer()
-	logging.SendHearbeatMailIndexer()
+	logging.StartHeartbeatIndexer(&indexedPages)
+	logging.SendHearbeatMailIndexer(&indexedPages)
 	fmt.Println("Logging and mail services started")
 
 	workers, err := strconv.Atoi(env.ConfigValue.Workers)
@@ -40,13 +42,13 @@ func IndexerSeed(){
 	}
 	mysqs.StartQueueMonitor(sqsUrl)
 
+	store.Init()
 	t1 := time.Now().UnixMilli()
 	for w:=0; w<workers; w++{
 		fmt.Println("started worker", w+1)
 		wg.Go(func() {
 			for{
-				store.Init()
-				err := indexer.Indexer(sqsUrl)
+				count, err := indexer.Indexer(sqsUrl)
 				if errors.Is(err, indexer.ErrEmptyQueue){
 					fmt.Println("worker exiting: empty queue")
 					return
@@ -55,11 +57,22 @@ func IndexerSeed(){
 					fmt.Println("indexer error:", err)
 					continue
 				}
+				if count > 0 {
+					atomic.AddInt64(&indexedPages, int64(count))
+				}
 			}
 		})
 	}
 	wg.Wait()
 	t2 := time.Now().UnixMilli()
+
+	// final flush to ensure remaining data is saved
+	fmt.Println("flushing remaining data to disk...")
+	if err := store.Flush(); err != nil {
+		fmt.Printf("final flush error: %v\n", err)
+	} else {
+		fmt.Println("final flush successful")
+	}
 	
 	// summary mail
 	resend.SendEmail(

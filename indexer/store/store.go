@@ -81,3 +81,19 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 	}
 	return nil
 }
+
+func Flush() error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if i > 0 {
+		err := disk.StoreInDisk(&offset, &i, &segmentId, &posting, &lexicon)
+		if err != nil {
+			return err
+		}
+		// reinitialize maps after successful push to disk
+		posting = make(map[string][]models.Posting)
+		lexicon = make(map[string]models.Lexicon)
+	}
+	return nil
+}

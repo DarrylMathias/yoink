@@ -10,26 +10,26 @@ import (
 
 var ErrEmptyQueue = errors.New("empty queue")
 
-func Indexer(sqsURL *string) error{
+func Indexer(sqsURL *string) (int, error) {
 	// receive message from sqs
 	messages, err := mysqs.ReceiveMessage(sqsURL)
 	if err != nil{
-		return err
+		return 0, err
 	}
 	if len(messages.Messages) == 0 {
-		return ErrEmptyQueue
+		return 0, ErrEmptyQueue
 	}
 	
 	// document processing and words extraction
 	indexerOutput, err := processing.Process(messages)
 	if err != nil{
-		return err
+		return 0, err
 	}
 
 	// indexer storage
 	err = store.StoreTF_IDF(indexerOutput)
 	if err != nil{
-		return err
+		return 0, err
 	}
 
 	// delete sqs messages
@@ -40,5 +40,5 @@ func Indexer(sqsURL *string) error{
 			fmt.Printf("deleted %d sqs messages\n", len(messages.Messages))
 		}
 	}
-	return nil
+	return len(messages.Messages), nil
 }
