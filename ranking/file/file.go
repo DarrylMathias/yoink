@@ -3,6 +3,7 @@ package file
 import (
 	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
 )
 
@@ -10,10 +11,12 @@ func GetFiles(extension string) ([]string, error){
 	var filesList []string
 
 	// get hostname
-	host, err := os.Hostname()
-	if err != nil{
+	u, err := user.Current()
+	if err != nil {
 		return nil, err
 	}
+	host := u.Username
+
 	// get list of all files
 	files, err := os.ReadDir(fmt.Sprintf("/home/%s/indexer_data", host))
 	if err != nil {

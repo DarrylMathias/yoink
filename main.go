@@ -17,5 +17,7 @@ func main() {
 	if err != nil{
 		panic(err)
 	}
-	fmt.Println(results)
+	for i, result := range results{
+		fmt.Printf("%d. %s => %s\n", i, result.Title, result.Url)
+	}
 }
