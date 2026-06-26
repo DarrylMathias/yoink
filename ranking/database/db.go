@@ -18,19 +18,27 @@ func GetCorpusStatistics() (models.CorpusStatistics, error){
 	return *stats, nil
 }
 
-func GetDocumentBatch(uuids []uuid.UUID) (*map[uuid.UUID]models.Page, error){
+func GetDocumentBatch(uuids []uuid.UUID) (*map[uuid.UUID]models.Page, error) {
 	db := database.DB
-
-	var docs []models.Page
-
-	err := db.Where("id IN ?", uuids).Find(&docs).Error
-	if err != nil{
-		return nil, err
-	}
-
 	docMap := make(map[uuid.UUID]models.Page)
-	for _, doc := range docs{
-		docMap[doc.Id] = doc
+	const batchSize = 10000
+
+	for i := 0; i < len(uuids); i += batchSize {
+		end := min(i+batchSize, len(uuids))
+
+		var docs []models.Page
+		err := db.
+			Where("id IN ?", uuids[i:end]).
+			Find(&docs).
+			Error
+		if err != nil {
+			return nil, err
+		}
+
+		for _, doc := range docs {
+			docMap[doc.Id] = doc
+		}
 	}
+
 	return &docMap, nil
 }

@@ -1,7 +1,6 @@
 package fetch
 
 import (
-	"fmt"
 	"yoink/ranking/file"
 	"yoink/ranking/load"
 
@@ -28,7 +27,6 @@ func FetchAllDocs(token string) (*map[uuid.UUID]int32, error){
 	if err != nil{
 		return nil, err
 	}
-	fmt.Println("postings", len(*postings))
 
 	return postings, nil
 }
