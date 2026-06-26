@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"yoink/indexer/store/database"
 	"yoink/models"
 )
 
@@ -53,6 +54,7 @@ func StoreInDisk(offset *int64, i *int64, segmentId *int64, posting *map[string]
 	*offset = 0
 	*i = 0
 	fmt.Println("synced to disk, segmenId:", *segmentId)
+	database.SetSegmentId(int(*segmentId+1))
 	*segmentId++
 	
 	return nil

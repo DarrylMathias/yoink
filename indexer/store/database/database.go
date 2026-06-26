@@ -22,6 +22,28 @@ func ComputeStatisticsBatch(totalDocumentLength float32, count int) error {
 	`, totalDocumentLength, count, count).Error
 }
 
+func GetSegmentId() (int, error){
+	var db = database.DB
+	stats := new(models.CorpusStatistics)
+
+	err := db.Where("id = 1").First(&stats).Error
+	if err != nil{
+		return 0, err
+	}
+
+	return int(stats.SegmentId), nil
+}
+
+func SetSegmentId(segmentId int) error{
+	var db = database.DB
+
+	err := db.Model(&models.CorpusStatistics{}).Where("id = ?", 1).Update("segment_id", segmentId).Error
+	if err != nil{
+		return err
+	}
+	return nil
+}
+
 func GetPageIds(hashes []string) (map[string]uuid.UUID, error) {
 	var pages []models.Page
 	db := database.DB

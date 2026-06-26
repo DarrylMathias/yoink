@@ -23,10 +23,18 @@ var lexicon map[string]models.Lexicon
 // mutex for mutual exclusion
 var mu sync.Mutex
 
-func Init() {
+func Init() error {
 	// reinitialzing them to avoid nil pointer dereferencing
 	posting = make(map[string][]models.Posting)
 	lexicon = make(map[string]models.Lexicon)
+
+	// get the segmenId starting index from db
+	segId, err := database.GetSegmentId()
+	if err != nil{
+		return err
+	}
+	segmentId = int64(segId)
+	return nil
 }
 
 func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
@@ -62,7 +70,8 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 		}
 		
 		i++
-		fmt.Printf("doc %d insertion success\n", i)
+		threshold, _ := strconv.Atoi(env.ConfigValue.PostingThreshold)
+		fmt.Printf("doc %d insertion success\n", segmentId*int64(threshold)+i)
 		
 		totalDocLength += float32(op.DocumentLength)
 		count++

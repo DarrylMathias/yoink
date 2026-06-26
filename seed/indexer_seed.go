@@ -42,7 +42,10 @@ func IndexerSeed(){
 	}
 	mysqs.StartQueueMonitor(sqsUrl)
 
-	store.Init()
+	err = store.Init()
+	if err != nil{
+		panic(err)
+	}
 	t1 := time.Now().UnixMilli()
 	for w:=0; w<workers; w++{
 		fmt.Println("started worker", w+1)
