@@ -2,7 +2,9 @@ package main
 
 import (
 	"yoink/app"
-	"yoink/seed"
+	"yoink/ranking"
+	"fmt"
+	// "yoink/ranking/fetch"
 )
 
 func main() {
@@ -10,5 +12,10 @@ func main() {
 	// seed.SeedSQS()
 	// seed.Crawler()
 	//seed.IndexerSeedSQS()
-	seed.IndexerSeed()
+	// seed.IndexerSeed()
+	results, err := ranking.RankPages("why are apples red?")
+	if err != nil{
+		panic(err)
+	}
+	fmt.Println(results)
 }
