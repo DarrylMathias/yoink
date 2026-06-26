@@ -19,7 +19,7 @@ func FetchAllDocs(token string) (*map[uuid.UUID]int32, error){
 		return nil, err
 	}
 	t2 := time.Now().UnixMilli()
-	fmt.Printf("get lexicon filenames took %d ms", t2-t1)
+	fmt.Printf("get lexicon filenames took %d ms\n", t2-t1)
 
 	// get lexicon
 	t1 = time.Now().UnixMilli()
@@ -28,7 +28,7 @@ func FetchAllDocs(token string) (*map[uuid.UUID]int32, error){
 		return nil, err
 	}
 	t2 = time.Now().UnixMilli()
-	fmt.Printf("load offsets took %d ms", t2-t1)
+	fmt.Printf("load offsets took %d ms\n", t2-t1)
 
 	// get postings map
 	t1 = time.Now().UnixMilli()
@@ -37,7 +37,7 @@ func FetchAllDocs(token string) (*map[uuid.UUID]int32, error){
 		return nil, err
 	}
 	t2 = time.Now().UnixMilli()
-	fmt.Printf("load postings took %d ms", t2-t1)
+	fmt.Printf("load postings took %d ms\n", t2-t1)
 
 	return postings, nil
 }

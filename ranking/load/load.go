@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"os"
+	"strconv"
 	"strings"
+	"sync"
 	"yoink/models"
+	"yoink/utils/env"
 
 	"github.com/google/uuid"
 )
@@ -14,26 +18,48 @@ import (
 func LoadOffsets(lexiconFiles []string, word string) (map[string]models.Lexicon, error){
 	output := make(map[string]models.Lexicon)
 
-	for _, file := range lexiconFiles{
-		lex := new(map[string]models.Lexicon)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	i := 0
 
-		// lexicon in bytes
-		bytes, err := os.ReadFile(file)
-		if err != nil{
-			return nil, err
-		}
-		// lexicon in json
-		err = json.Unmarshal(bytes, lex)
-		if err != nil{
-			return nil, err
-		}
-		lexicons := *lex
-		lexicon, exists := lexicons[word]
-		if exists{
-			postingFile := strings.ReplaceAll(file, "lexicon", "posting")
-			output[strings.ReplaceAll(postingFile, ".json", ".bin")] = lexicon
+	workers, err := strconv.Atoi(env.ConfigValue.Workers)
+	if err != nil{
+		return nil, err
+	}
+	for _, file := range lexiconFiles{
+		task := func(){
+					lex := new(map[string]models.Lexicon)
+
+					// lexicon in bytes
+					bytes, err := os.ReadFile(file)
+					if err != nil{
+						fmt.Println("error reading bytes in LoadOffsets, ", err)
+						return
+					}
+					// lexicon in json
+					err = json.Unmarshal(bytes, lex)
+					if err != nil{
+						fmt.Println("error parsing json in LoadOffsets, ", err)
+						return
+					}
+					lexicons := *lex
+					lexicon, exists := lexicons[word]
+					if exists{
+						postingFile := strings.ReplaceAll(file, "lexicon", "posting")
+						mu.Lock()
+						output[strings.ReplaceAll(postingFile, ".json", ".bin")] = lexicon
+						mu.Unlock()
+					}
+				}
+		if i < workers{
+			wg.Go(task)
+			i++
+		}else{
+			wg.Wait()
+			i = 0
 		}
 	}
+	wg.Wait()
 	return output, nil
 }
 
