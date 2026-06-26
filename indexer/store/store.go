@@ -18,7 +18,6 @@ var segmentId int64 = 0
 
 // in memory posting and lexicon table
 var posting map[string][]models.Posting
-var lexicon map[string]models.Lexicon
 
 // mutex for mutual exclusion
 var mu sync.Mutex
@@ -26,7 +25,6 @@ var mu sync.Mutex
 func Init() error {
 	// reinitialzing them to avoid nil pointer dereferencing
 	posting = make(map[string][]models.Posting)
-	lexicon = make(map[string]models.Lexicon)
 
 	// get the segmenId starting index from db
 	segId, err := database.GetSegmentId()
@@ -85,14 +83,13 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 	}
 
 	if i >= int64(threshold){
-		err := disk.StoreInDisk(&offset, &i, &segmentId, &posting, &lexicon)
+		err := disk.StoreInDisk(&offset, &i, &segmentId, &posting)
 		if err != nil{
 			mu.Unlock()
 			return err
 		}
 		// reinitialize maps after successful push to disk
 		posting = make(map[string][]models.Posting)
-		lexicon = make(map[string]models.Lexicon)
 	}
 
 	mu.Unlock()
@@ -120,13 +117,12 @@ func Flush() error {
 	defer mu.Unlock()
 
 	if i > 0 {
-		err := disk.StoreInDisk(&offset, &i, &segmentId, &posting, &lexicon)
+		err := disk.StoreInDisk(&offset, &i, &segmentId, &posting)
 		if err != nil {
 			return err
 		}
 		// reinitialize maps after successful push to disk
 		posting = make(map[string][]models.Posting)
-		lexicon = make(map[string]models.Lexicon)
 	}
 	return nil
 }

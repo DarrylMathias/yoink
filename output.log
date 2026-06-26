@@ -1,0 +1,37 @@
+RDS connection success
+Redis database connection success
+Upstash connection success
+time to tokenize: 0 ms
+time to get corpus stats: 72 ms
+get lexicon filenames took 1 ms
+load offsets took 830 ms
+load postings took 2 ms
+mapping  3288
+time to fetch all docs : 833 ms
+time to get documents from db : 3922 ms
+time to compute bm25 : 2 ms
+get lexicon filenames took 0 ms
+load offsets took 769 ms
+load postings took 1 ms
+mapping  2012
+time to fetch all docs : 770 ms
+time to get documents from db : 2860 ms
+time to compute bm25 : 1 ms
+get lexicon filenames took 0 ms
+load offsets took 749 ms
+load postings took 1 ms
+mapping  1260
+time to fetch all docs : 751 ms
+time to get documents from db : 2807 ms
+time to compute bm25 : 0 ms
+time to sort results : 3660 ms
+0. A New Report Reveals the Unexpected Group of Executives Winning the Latest Pay Boom | Inc. | Flipboard => https://flipboard.com/@incmagazine/lessons-from-startups-entrepreneurs-4r5rsrsdz/a-new-report-reveals-the-unexpected-group-of-executives-winning-the-latest-pay-b/a-lQM5KyM5T-SsCvbRTpchdw%3Aa%3A902842762-61c92389a5%2Fyoutube.com
+1. BGR | @BGR | Flipboard => https://flipboard.com/@bgr/bgr-lu4ddljsz
+2. Bringing Cyberpunk 2077 to Mac - WWDC26 - Videos - Apple Developer => https://developer.apple.com/videos/play/wwdc2026/356?time=785
+3. Chanticleer - Podcast - Apple Podcasts => https://podcasts.apple.com/bj/podcast/chanticleer/id1643369456
+4. Managing Type 2 Diabetes with Food and Fitness => https://www.healthline.com/program/managing-type-2-diabetes-with-food-and-fitness
+5. ‎Apps y juegos para Vision - App Store => https://apps.apple.com/us/vision/apps-and-games?l=es-MX
+6. FARK.com:  (14095380) If you're 85, your bank does not need you to deposit $18,000 to cover Apple charges. Scammers would have gotten away with it if it weren't for the alert store employee coming to the rescue of the old woman standing at the Bitcoin machine => https://www.fark.com/comments/14095380/If-youre-85-your-bank-does-not-need-you-to-deposit-$18000-to-cover-Apple-charges-Scammers-would-have-gotten-away-with-it-if-it-werent-for-alert-store-employee-coming-to-rescue-of-old-woman-standing-at-Bitcoin-machine
+7. New Fed Chair Kevin Warsh’s decision to drop forward guidance may actually empower the central bank’s other policymakers | Flipboard => https://flipboard.com/topic/finance/new-fed-chair-kevin-warsh-s-decision-to-drop-forward-guidance-may-actually-empow/a-GX0DEJHIRmGFFJb7mE_yYw%3Aa%3A43591897-54dc0edfdc%2Ffortune.com
+8. Repair Hacks | Hackaday => https://hackaday.com/category/repair-hacks
+9. Krista Jones Senior Director, Commerce and Partnerships => https://www.esquire.com/author/246787/krista-jones

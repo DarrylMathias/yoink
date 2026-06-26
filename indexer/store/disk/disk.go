@@ -2,14 +2,25 @@ package disk
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"yoink/indexer/store/database"
 	"yoink/models"
 )
 
-func StoreInDisk(offset *int64, i *int64, segmentId *int64, posting *map[string][]models.Posting, lexicon *map[string]models.Lexicon) error{
+func Sort(posting *map[string][]models.Posting) []string {
+	// extract keys
+	var keys []string
+	for key, _ := range *posting{
+		keys = append(keys, key)
+	}
+
+	sort.Strings(keys)
+	return keys
+}
+
+func StoreInDisk(offset *int64, i *int64, segmentId *int64, posting *map[string][]models.Posting) error{
 	// ensure directory exists
 	err := os.MkdirAll("/home/ubuntu/indexer_data", 0755)
 	if err != nil {
@@ -17,37 +28,47 @@ func StoreInDisk(offset *int64, i *int64, segmentId *int64, posting *map[string]
 	}
 
 	// Create the posting file
-	file, err := os.Create(fmt.Sprintf("/home/ubuntu/indexer_data/posting%d.bin", *segmentId))
+	postingFile, err := os.Create(fmt.Sprintf("/home/ubuntu/indexer_data/posting%d.bin", *segmentId))
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer postingFile.Close()
+
+	// Create the lexicon file
+	lexiconFile, err := os.Create(fmt.Sprintf("/home/ubuntu/indexer_data/posting%d.bin", *segmentId))
+	if err != nil {
+		return err
+	}
+	defer lexiconFile.Close()
+
+	// sort according to keys
+	keys := Sort(posting)
 
 	// Write the struct to the binary file
-	for word, post := range *posting{
-		err = binary.Write(file, binary.LittleEndian, post)
+	for _, key := range keys{
+		post := *posting
+		err = binary.Write(postingFile, binary.LittleEndian, post[key])
 		if err != nil {
 			return err
 		}
 
 		// lexicon computation
-		length := int64(len(post) * binary.Size(models.Posting{}))
-		lex := *lexicon
-		lex[word] = models.Lexicon{
+		length := int64(len(post[key]) * binary.Size(models.Posting{}))
+		var bytes [64]byte
+		copy(bytes[:], key)
+		lex := models.Lexicon{
+			Term: bytes,
 			Offset: *offset,
 			Length: length,
 		}
-		*offset += length
-	}
+		
+		// lexicon saved in file
+		err = binary.Write(lexiconFile, binary.LittleEndian, lex)
+		if err != nil {
+			return err
+		} 
 
-	// lexicon stored to lexicon file
-	jsonData, err := json.Marshal(lexicon)
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(fmt.Sprintf("/home/ubuntu/indexer_data/lexicon%d.json", *segmentId), jsonData, 0644)
-	if err != nil {
-		return err
+		*offset += length
 	}
 
 	// re-initiailizations
