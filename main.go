@@ -1,10 +1,10 @@
 package main
 
 import (
-	"yoink/app"
-	"yoink/ranking"
 	"fmt"
-	// "yoink/ranking/fetch"
+	"yoink/app"
+
+	"yoink/ranking"
 )
 
 func main() {

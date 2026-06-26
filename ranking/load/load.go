@@ -3,7 +3,6 @@ package load
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -13,6 +12,7 @@ import (
 	"yoink/utils/env"
 
 	"github.com/google/uuid"
+	"github.com/bcicen/jstream"
 )
 
 func LoadOffsets(lexiconFiles []string, word string) (map[string]models.Lexicon, error){
@@ -28,27 +28,27 @@ func LoadOffsets(lexiconFiles []string, word string) (map[string]models.Lexicon,
 	}
 	for _, file := range lexiconFiles{
 		task := func(){
-					lex := new(map[string]models.Lexicon)
+					f, err := os.Open(file)
+					if err != nil{
+						fmt.Println("error opening file in LoadOffsets, ", err)
+						return
+					}
 
-					// lexicon in bytes
-					bytes, err := os.ReadFile(file)
-					if err != nil{
-						fmt.Println("error reading bytes in LoadOffsets, ", err)
-						return
-					}
-					// lexicon in json
-					err = json.Unmarshal(bytes, lex)
-					if err != nil{
-						fmt.Println("error parsing json in LoadOffsets, ", err)
-						return
-					}
-					lexicons := *lex
-					lexicon, exists := lexicons[word]
-					if exists{
-						postingFile := strings.ReplaceAll(file, "lexicon", "posting")
-						mu.Lock()
-						output[strings.ReplaceAll(postingFile, ".json", ".bin")] = lexicon
-						mu.Unlock()
+					decoder := jstream.NewDecoder(f, 1).EmitKV()
+					for mv := range decoder.Stream() {
+						if kv, ok := mv.Value.(jstream.KV); ok {
+							if kv.Key == word{
+								lexiconMap := kv.Value.(map[string]interface{})
+								lexicon := models.Lexicon{
+									Length: int64(lexiconMap["length"].(float64)),
+									Offset: int64(lexiconMap["offset"].(float64)),
+								}
+								postingFile := strings.ReplaceAll(file, "lexicon", "posting")
+								mu.Lock()
+								output[strings.ReplaceAll(postingFile, ".json", ".bin")] = lexicon
+								mu.Unlock()
+							}
+						}
 					}
 				}
 		if i < workers{
