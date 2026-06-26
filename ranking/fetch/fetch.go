@@ -14,7 +14,7 @@ func FetchAllDocs(token string) (*map[uuid.UUID]int32, error){
 
 	// get lexicon filenames
 	t1 := time.Now().UnixMilli()
-	lexiconFiles, err := file.GetFiles(".json")
+	lexiconFiles, err := file.GetLexiconFiles()
 	if err != nil{
 		return nil, err
 	}

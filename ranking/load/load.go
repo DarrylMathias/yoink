@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/binary"
 	"os"
+	"strings"
 	"yoink/models"
 
 	"github.com/google/uuid"
 )
 
 func LoadOffsets(lexiconFiles []string, word string) (map[string]models.Lexicon, error){
-	output := make(map[string]models.Lexicon)
 	lexicons := make(map[string]models.Lexicon)
 
 	for _, file := range lexiconFiles{
@@ -48,22 +48,24 @@ func LoadOffsets(lexiconFiles []string, word string) (map[string]models.Lexicon,
 				return nil, err
 			}
 
+			term := string(bytes.TrimRight(lexicon.Term[:], "\x00"))
+
 			// conditions
-			if string(lexicon.Term[:]) == word{
+			if term == word{
 				break
 			}
-			if string(lexicon.Term[:]) < word{
-				r = mid - 1
-			}else{
+			if term < word{
 				l = mid + 1
+			}else{
+				r = mid - 1
 			}
 		}
 		if l <= r{
-			lexicons[word] = *lexicon
+			lexicons[file] = *lexicon
 		}
 
 	}
-	return output, nil
+	return lexicons, nil
 }
 
 func LoadPostings(lexicons map[string]models.Lexicon) (*map[uuid.UUID]int32, error){
@@ -75,7 +77,9 @@ func LoadPostings(lexicons map[string]models.Lexicon) (*map[uuid.UUID]int32, err
 			lexicon.Length/int64(binary.Size(models.Posting{})),
 		)
 
-		fp, err := os.Open(file)
+		postingFile := strings.Replace(file, "lexicon", "posting", 1)
+
+		fp, err := os.Open(postingFile)
 		if err != nil{
 			return nil, err
 		}

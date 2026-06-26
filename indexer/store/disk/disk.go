@@ -35,7 +35,7 @@ func StoreInDisk(offset *int64, i *int64, segmentId *int64, posting *map[string]
 	defer postingFile.Close()
 
 	// Create the lexicon file
-	lexiconFile, err := os.Create(fmt.Sprintf("/home/ubuntu/indexer_data/posting%d.bin", *segmentId))
+	lexiconFile, err := os.Create(fmt.Sprintf("/home/ubuntu/indexer_data/lexicon%d.bin", *segmentId))
 	if err != nil {
 		return err
 	}

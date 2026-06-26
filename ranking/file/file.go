@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path/filepath"
+	"strings"
 )
 
-func GetFiles(extension string) ([]string, error){
+func GetLexiconFiles() ([]string, error){
 	var filesList []string
 
 	// get hostname
@@ -26,7 +26,7 @@ func GetFiles(extension string) ([]string, error){
 	// find files list
 	for _, file := range files {
 		full_path := fmt.Sprintf("/home/%s/indexer_data/%s", host, file.Name())
-		if filepath.Ext(full_path) == extension{
+		if strings.Contains(full_path, "lexicon"){
 			filesList = append(filesList, full_path)
 		}
 	}
