@@ -92,6 +92,12 @@ func StoreTF_IDF(indexerOutput []models.IndexerOutput) error{
 		posting = make(map[string][]models.Posting)
 	}
 
+	// store doc metadata in binary
+	err = disk.StoreDiskLength(indexerOutput, pageMap)
+	if err != nil{
+		return err
+	}
+
 	mu.Unlock()
 
 	// update all document lengths in DB

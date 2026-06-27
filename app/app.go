@@ -11,7 +11,11 @@ import (
 	"yoink/utils/redis"
 	"yoink/utils/resend"
 	"yoink/utils/upstash"
+
+	"github.com/google/uuid"
 )
+
+var DocumentLengthMap map[uuid.UUID]int32 
 
 func App(){
 	err := env.NewEnv()

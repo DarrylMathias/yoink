@@ -13,6 +13,15 @@ import (
 	"github.com/google/uuid"
 )
 
+
+func Init() error {
+	err := database.GetDocumentLengthBatch()
+	if err != nil{
+		return err
+	}
+	return nil
+}
+
 func RankPages(query string) ([]models.Page, error){
 
 	k := 10
@@ -46,26 +55,10 @@ func RankPages(query string) ([]models.Page, error){
 		fmt.Println("mapping ", len(*tfMapping))
 		t2 = time.Now().UnixMilli()
 		fmt.Printf("time to fetch all docs : %d ms\n", t2-t1)
-
-		// get matching documents in batch by uuid
-		t1 = time.Now().UnixMilli()
-		var uuids []uuid.UUID
-		for pageId := range *tfMapping{
-			uuids = append(uuids, pageId)
-		}
-		if len(uuids) == 0 {
-			continue
-		}
-		documents, err := database.GetDocumentBatch(uuids)
-		if err != nil{
-			return nil, err
-		}
-		t2 = time.Now().UnixMilli()
-		fmt.Printf("time to get documents from db : %d ms\n", t2-t1)
 		
 		t1 = time.Now().UnixMilli()
 		// compute bm25 of each (token, document) pair
-	 	bm25MapWord := computation.Compute(token, tfMapping, stats, documents)
+	 	bm25MapWord := computation.Compute(token, tfMapping, stats)
 		t2 = time.Now().UnixMilli()
 		fmt.Printf("time to compute bm25 : %d ms\n", t2-t1)
 

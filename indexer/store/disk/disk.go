@@ -8,6 +8,8 @@ import (
 	"sort"
 	"yoink/indexer/store/database"
 	"yoink/models"
+
+	"github.com/google/uuid"
 )
 
 func Sort(posting *map[string][]models.Posting) []string {
@@ -21,6 +23,41 @@ func Sort(posting *map[string][]models.Posting) []string {
 	return keys
 }
 
+func GetRootPath() (string, error){
+	// dynamic hostname
+	u, err := user.Current()
+	if err != nil {
+		return "", err
+	}
+	host := u.Username
+	return fmt.Sprintf("/home/%s/indexer_data/", host), nil
+}
+
+func StoreDiskLength(indexerOutput []models.IndexerOutput, pageMap map[string]uuid.UUID) error{
+	// root path
+	root, err := GetRootPath()
+	if err != nil{
+		return err
+	}
+
+	// open docMeta.bin file
+	file, err := os.OpenFile(root + "docMeta.bin", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// append entry to file
+	for _, op := range indexerOutput{
+		docMeta := models.DocMeta{
+			Id: pageMap[op.Hash],
+			DocLength: int32(op.DocumentLength),
+		}
+		binary.Write(file, binary.LittleEndian, docMeta)
+	}
+	return nil
+}
+
 func StoreInDisk(offset *int64, i *int64, segmentId *int64, posting *map[string][]models.Posting) error{
 	// ensure directory exists
 	err := os.MkdirAll("/home/ubuntu/indexer_data", 0755)
@@ -28,22 +65,21 @@ func StoreInDisk(offset *int64, i *int64, segmentId *int64, posting *map[string]
 		return err
 	}
 
-	// dynamic hostname
-	u, err := user.Current()
-	if err != nil {
+	// get root path
+	root, err := GetRootPath()
+	if err != nil{
 		return err
 	}
-	host := u.Username
 
 	// Create the posting file
-	postingFile, err := os.Create(fmt.Sprintf("/home/%s/indexer_data/posting%d.bin", host, *segmentId))
+	postingFile, err := os.Create(fmt.Sprintf("%sposting%d.bin", root, *segmentId))
 	if err != nil {
 		return err
 	}
 	defer postingFile.Close()
 
 	// Create the lexicon file
-	lexiconFile, err := os.Create(fmt.Sprintf("/home/%s/indexer_data/lexicon%d.bin", host, *segmentId))
+	lexiconFile, err := os.Create(fmt.Sprintf("%slexicon%d.bin", root, *segmentId))
 	if err != nil {
 		return err
 	}
