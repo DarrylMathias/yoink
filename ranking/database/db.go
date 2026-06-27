@@ -3,7 +3,6 @@ package database
 import (
 	"bytes"
 	"encoding/binary"
-	"io"
 	"os"
 	"yoink/app"
 	"yoink/indexer/store/disk"
@@ -30,31 +29,28 @@ func GetDocumentLengthBatch() (error) {
 		return err
 	}
 
-	// open docMeta file
+	// read entire file bytes at once
 	var docMetas []models.DocMeta
-	fp, err := os.Open(root + "docMeta.bin")
+	docMetaBytes, err := os.ReadFile(root + "docMeta.bin")
 	if err != nil{
 		return err
 	}
 
 	// byte array
-	docMetaBytes := make([]byte, binary.Size(models.DocMeta{}))
 	var docMeta models.DocMeta
 	offset := 0
 
-	for {
-		// read one entry
-		_, err := fp.ReadAt(docMetaBytes, int64(offset))
-		offset += binary.Size(models.DocMeta{})
-		if err == io.EOF{
+	for offset < len(docMetaBytes) {
+		// break if we have an incomplete chunk
+		if offset+binary.Size(models.DocMeta{}) > len(docMetaBytes) {
 			break
 		}
-		if err != nil{
-			return err
-		}
+		
+		docMetaByte := docMetaBytes[offset : offset+binary.Size(models.DocMeta{})]
+		offset += binary.Size(models.DocMeta{})
 
 		// read binary data to struct
-		err = binary.Read(bytes.NewReader(docMetaBytes), binary.LittleEndian, &docMeta)
+		err = binary.Read(bytes.NewReader(docMetaByte), binary.LittleEndian, &docMeta)
 		if err != nil{
 			return err
 		}
