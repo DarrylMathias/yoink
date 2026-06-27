@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"os/user"
 	"sort"
 	"yoink/indexer/store/database"
 	"yoink/models"
@@ -12,7 +13,7 @@ import (
 func Sort(posting *map[string][]models.Posting) []string {
 	// extract keys
 	var keys []string
-	for key, _ := range *posting{
+	for key := range *posting{
 		keys = append(keys, key)
 	}
 
@@ -27,15 +28,22 @@ func StoreInDisk(offset *int64, i *int64, segmentId *int64, posting *map[string]
 		return err
 	}
 
+	// dynamic hostname
+	u, err := user.Current()
+	if err != nil {
+		return err
+	}
+	host := u.Username
+
 	// Create the posting file
-	postingFile, err := os.Create(fmt.Sprintf("/home/ubuntu/indexer_data/posting%d.bin", *segmentId))
+	postingFile, err := os.Create(fmt.Sprintf("/home/%s/indexer_data/posting%d.bin", host, *segmentId))
 	if err != nil {
 		return err
 	}
 	defer postingFile.Close()
 
 	// Create the lexicon file
-	lexiconFile, err := os.Create(fmt.Sprintf("/home/ubuntu/indexer_data/lexicon%d.bin", *segmentId))
+	lexiconFile, err := os.Create(fmt.Sprintf("/home/%s/indexer_data/lexicon%d.bin", host, *segmentId))
 	if err != nil {
 		return err
 	}
