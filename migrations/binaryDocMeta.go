@@ -33,6 +33,7 @@ func task(file *os.File) {
 			fmt.Println(err)
 		}
 		if len(pages) == 0 {
+			fmt.Println("ZERO ROWS FETCHED FOR OFFSET:", offset)
 			return
 		}
 		fmt.Println(
@@ -55,6 +56,7 @@ func task(file *os.File) {
 
 func MigrateDocMeta() {
 	atomic.StoreInt64(&i, 0)
+	fmt.Println("Starting Migration! Configured Workers:", env.ConfigValue.Workers)
 	workers, err := strconv.Atoi(env.ConfigValue.Workers)
 	if err != nil {
 		panic(err)
