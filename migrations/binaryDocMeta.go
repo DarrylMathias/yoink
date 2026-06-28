@@ -11,9 +11,11 @@ import (
 	"yoink/models"
 	"yoink/utils/database"
 	"yoink/utils/env"
+
+	"github.com/google/uuid"
 )
 
-var i      int64
+var i int64
 var mu sync.Mutex
 
 const noOfPagesInDB = 1_043_092
@@ -21,27 +23,20 @@ const noOfPagesInDB = 1_043_092
 func task(file *os.File) {
 	db := database.DB
 
-	for {
-		offset := int(atomic.AddInt64(&i, 500) - 500)
-		var pages []models.Page
-		if offset >= noOfPagesInDB {
-			return
-		}
+	lastID := uuid.Nil.String()
+	totalRows := 0
 
-		err := db.Limit(500).Offset(offset).Order("id").Find(&pages).Error
+	for {
+		var pages []models.Page
+
+		err := db.Limit(500).Where("id > ?", lastID).Order("id").Find(&pages).Error
 		if err != nil {
 			fmt.Println(err)
 		}
 		if len(pages) == 0 {
-			fmt.Println("ZERO ROWS FETCHED FOR OFFSET:", offset)
 			return
 		}
-		fmt.Println(
-			"offset:",
-			offset,
-			"rows:",
-			len(pages),
-		)
+		
 		for _, page := range pages {
 			docMeta := models.DocMeta{
 				Id:        page.Id,
@@ -51,6 +46,10 @@ func task(file *os.File) {
 			binary.Write(file, binary.LittleEndian, docMeta)
 			mu.Unlock()
 		}
+
+		lastID = pages[len(pages)-1].Id.String()
+		totalRows += len(pages)
+		fmt.Printf("Migrated %d rows (last ID: %s)\n", totalRows, lastID)
 	}
 }
 
@@ -69,7 +68,7 @@ func MigrateDocMeta() {
 	}
 
 	// open docMeta.bin file
-	file, err := os.OpenFile(root+"docMeta.bin", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(root+"docMeta.bin", os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}

@@ -10,6 +10,8 @@ import (
 	"yoink/utils/env"
 	mysqs "yoink/utils/myaws/sqs"
 	"yoink/utils/resend"
+
+	"github.com/google/uuid"
 )
 var i int64
 
@@ -18,26 +20,19 @@ const noOfPagesInDB = 1_043_092
 func task(queueURL *string){
 	db := database.DB
 
-	for {
-		offset := int(atomic.AddInt64(&i, 500) - 500)
-		var pages []models.Page
-		if offset >= noOfPagesInDB {
-			return
-		}
+	lastID := uuid.Nil.String()
+	totalRows := 0
 
-		err := db.Limit(500).Offset(offset).Find(&pages).Error   
+	for {
+		var pages []models.Page
+
+		err := db.Limit(500).Where("id > ?", lastID).Order("id").Find(&pages).Error   
 		if err != nil{
 			fmt.Println(err)
 		}
 		if len(pages) == 0 {
 			return
 		}
-		fmt.Println(
-			"offset:",
-			offset,
-			"rows:",
-			len(pages),
-		)
 
 		var msgs []string
 		for _, page := range pages{
@@ -46,6 +41,10 @@ func task(queueURL *string){
 		if err := mysqs.SendBatchMessage(queueURL, msgs); err != nil{
 			fmt.Println(err)
 		}
+
+		lastID = pages[len(pages)-1].Id.String()
+		totalRows += len(pages)
+		fmt.Printf("Pushed %d rows (last ID: %s)\n", totalRows, lastID)
 	}
 }
 
