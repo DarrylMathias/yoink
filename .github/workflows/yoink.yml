@@ -28,16 +28,23 @@ jobs:
     needs: ci
     runs-on: ubuntu-latest
     steps:
-      - name: Check secrets exist
+      - name: Inspect key
         run: |
-          echo "Host length: ${#HOST}"
-          echo "Key length: ${#KEY}"
+          printf "%s" "$KEY" > key.pem
+          head -1 key.pem
+          tail -1 key.pem
+          ssh-keygen -l -f key.pem
         env:
-          HOST: ${{ secrets.REMOTE_HOST }}
+          KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Hash secret
+        run: |
+          printf "%s" "$KEY" > key.pem
+          sha256sum key.pem
+        env:
           KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Deploy on EC2
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.REMOTE_HOST }}
           username: ${{ secrets.REMOTE_USER }}
