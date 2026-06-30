@@ -1,10 +1,12 @@
 package tokenizer
 
 import (
+	"fmt"
 	"regexp"
 	"slices"
 	"strings"
 	"unicode"
+
 	"github.com/kljensen/snowball"
 )
 
@@ -26,6 +28,7 @@ func Tokenize(text string) ([]string, error) {
 		return nil, err
 	}
 
+	fmt.Println("list of generated tokens: ", filteredText)
 	return filteredText, nil
 }
 
