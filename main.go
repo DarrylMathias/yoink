@@ -1,27 +1,26 @@
 package main
 
 import (
-	// "fmt"
 	"yoink/app"
-	"yoink/migrations"
-
 	"yoink/ranking"
+	"yoink/router"
+	"yoink/utils/env"
+
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 )
 
 
 func main() {
     app.App()
-	// seed.SeedSQS()
-	// seed.Crawler()
-	//seed.IndexerSeedSQS()
-	// seed.IndexerSeed()
 	ranking.Init()
-	// results, err := ranking.RankPages("why are apples red?")
-	// if err != nil{
-	// 	panic(err)
-	// }
-	// for i, result := range results{
-	// 	fmt.Printf("%d. %s => %s\n", i, result.Title, result.Url)
-	// }
-	migrations.MigrateDocMeta()
+
+	e := echo.New()
+	e.Use(middleware.RequestLogger())
+	e.Use(middleware.Recover())
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(5)))
+
+	router.RegisterRoutes(e)
+	e.Logger.Error("failed to start server", "error", e.Start(env.ConfigValue.ApplicationPort)) 
+
 }
