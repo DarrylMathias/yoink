@@ -1,0 +1,42 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: yoink action
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version-file: go.mod
+
+    - name: Build
+      run: go build -o yoink .
+
+  cd:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.TARGET }}
+            git pull origin main
+            go build -o yoink .
+            sudo systemctl restart yoink
+            sudo systemctl status yoink --no-pager
