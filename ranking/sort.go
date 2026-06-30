@@ -44,6 +44,7 @@ func Sort(bm25Map *map[uuid.UUID]float64, k int) ([]models.SearchResult, error) 
 			Description: docMap[id].Description,
 			Crawl_time: docMap[id].Crawl_time,
 			Document_length: docMap[id].Document_length,
+			BM25_Rating: (*bm25Map)[id],
 		}
 		result = append(result, res)
 	}
