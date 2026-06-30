@@ -10,8 +10,6 @@ import (
 	"yoink/utils/env"
 	mysqs "yoink/utils/myaws/sqs"
 	"yoink/utils/resend"
-
-	"github.com/google/uuid"
 )
 var i int64
 
@@ -19,32 +17,48 @@ const noOfPagesInDB = 1_043_092
 
 func task(queueURL *string){
 	db := database.DB
+	
+	rows, err := db.Model(&models.Page{}).
+		Select("url_hash").
+		Rows()
 
-	lastID := uuid.Nil.String()
+	if err != nil {
+		fmt.Println("DB ERROR:", err)
+		return
+	}
+	defer rows.Close()
+
+	var msgs []string
 	totalRows := 0
 
-	for {
-		var pages []models.Page
-
-		err := db.Limit(500).Where("id > ?", lastID).Order("id").Find(&pages).Error   
-		if err != nil{
-			fmt.Println(err)
-		}
-		if len(pages) == 0 {
+	for rows.Next() {
+		var page models.Page
+		if err := database.DB.ScanRows(rows, &page); err != nil {
+			fmt.Println("Scan Error:", err)
 			return
 		}
 
-		var msgs []string
-		for _, page := range pages{
-			msgs = append(msgs, page.Url_hash)
+		msgs = append(msgs, page.Url_hash)
+
+		if len(msgs) == 500 {
+			if err := mysqs.SendBatchMessage(queueURL, msgs); err != nil {
+				fmt.Println(err)
+			}
+			totalRows += 500
+			msgs = nil // reset slice
+			
+			if totalRows%50000 == 0 {
+				fmt.Printf("Pushed %d rows to SQS...\n", totalRows)
+			}
 		}
-		if err := mysqs.SendBatchMessage(queueURL, msgs); err != nil{
+	}
+
+	// Send remaining messages
+	if len(msgs) > 0 {
+		if err := mysqs.SendBatchMessage(queueURL, msgs); err != nil {
 			fmt.Println(err)
 		}
-
-		lastID = pages[len(pages)-1].Id.String()
-		totalRows += len(pages)
-		fmt.Printf("Pushed %d rows (last ID: %s)\n", totalRows, lastID)
+		totalRows += len(msgs)
 	}
 }
 

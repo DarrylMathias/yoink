@@ -11,45 +11,46 @@ import (
 	"yoink/models"
 	"yoink/utils/database"
 	"yoink/utils/env"
-
-	"github.com/google/uuid"
 )
 
 var i int64
-var mu sync.Mutex
 
 const noOfPagesInDB = 1_043_092
 
 func task(file *os.File) {
 	db := database.DB
 
-	lastID := uuid.Nil.String()
+	rows, err := db.Model(&models.Page{}).
+		Select("id", "document_length").
+		Order("id").
+		Rows()
+
+	if err != nil {
+		fmt.Println("db error:", err)
+		return
+	}
+	defer rows.Close()
+
 	totalRows := 0
-
-	for {
-		var pages []models.Page
-
-		err := db.Limit(500).Where("id > ?", lastID).Order("id").Find(&pages).Error
-		if err != nil {
-			fmt.Println(err)
-		}
-		if len(pages) == 0 {
+	for rows.Next() {
+		var page models.Page
+		if err := db.ScanRows(rows, &page); err != nil {
+			fmt.Println("Scan Error:", err)
 			return
 		}
-		
-		for _, page := range pages {
-			docMeta := models.DocMeta{
-				Id:        page.Id,
-				DocLength: page.Document_length,
-			}
-			mu.Lock()
-			binary.Write(file, binary.LittleEndian, docMeta)
-			mu.Unlock()
+
+		docMeta := models.DocMeta{
+			Id:        page.Id,
+			DocLength: page.Document_length,
 		}
 
-		lastID = pages[len(pages)-1].Id.String()
-		totalRows += len(pages)
-		fmt.Printf("Migrated %d rows (last ID: %s)\n", totalRows, lastID)
+		// Write directly to file
+		binary.Write(file, binary.LittleEndian, docMeta)
+
+		totalRows++
+		if totalRows%50000 == 0 {
+			fmt.Printf("Migrated %d rows...\n", totalRows)
+		}
 	}
 }
 
