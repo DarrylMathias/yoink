@@ -6,6 +6,7 @@ name: yoink action
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
 
@@ -27,6 +28,14 @@ jobs:
     needs: ci
     runs-on: ubuntu-latest
     steps:
+      - name: Check secrets exist
+        run: |
+          echo "Host length: ${#HOST}"
+          echo "Key length: ${#KEY}"
+        env:
+          HOST: ${{ secrets.REMOTE_HOST }}
+          KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
