@@ -25,8 +25,8 @@ func Ranking(c *echo.Context) error{
 		c.Logger().Error(err.Error())
 		return utils.NewApiError(c, http.StatusBadRequest, fmt.Sprintln("An internal server error has occurred"))
 	}
-	if kInt >= 50{
-		kInt = 50
+	if kInt >= 100{
+		kInt = 100
 	}
 
 	pages, err := ranking.RankPages(q, kInt)
