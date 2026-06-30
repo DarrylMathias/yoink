@@ -2,6 +2,7 @@ package router
 
 import (
 	"yoink/controller"
+	"yoink/controller/crawl"
 	"yoink/controller/query"
 
 	"github.com/labstack/echo/v5"
@@ -12,4 +13,5 @@ func RegisterRoutes(e *echo.Echo){
 	api.GET("/",  controller.API)
 
 	api.GET("/query", query.Ranking)
+	api.GET("/crawledPages", crawl.NoOfPagesCrawled)
 }
