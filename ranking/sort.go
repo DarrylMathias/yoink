@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func Sort(bm25Map *map[uuid.UUID]float64, k int) ([]models.Page, error) {
+func Sort(bm25Map *map[uuid.UUID]float64, k int) ([]models.SearchResult, error) {
 	bm25MapVal := *bm25Map
 	// extract uuids
     var ids []uuid.UUID
@@ -23,7 +23,7 @@ func Sort(bm25Map *map[uuid.UUID]float64, k int) ([]models.Page, error) {
     
     // fetch docs of top k matches
 	if len(ids) == 0 {
-		return []models.Page{}, nil
+		return []models.SearchResult{}, nil
 	}
 	if k > len(ids) {
 		k = len(ids)
@@ -36,9 +36,16 @@ func Sort(bm25Map *map[uuid.UUID]float64, k int) ([]models.Page, error) {
 	docMap := *docMapPtr
 
 	// construct result array using docMap
-	var result []models.Page
+	var result []models.SearchResult
 	for _, id := range ids[:k]{
-		result = append(result, docMap[id])
+		res := models.SearchResult{
+			Url: docMap[id].Url,
+			Title: docMap[id].Title,
+			Description: docMap[id].Description,
+			Crawl_time: docMap[id].Crawl_time,
+			Document_length: docMap[id].Document_length,
+		}
+		result = append(result, res)
 	}
 
 	return result, nil

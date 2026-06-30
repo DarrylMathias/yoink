@@ -22,7 +22,7 @@ func Init() error {
 	return nil
 }
 
-func RankPages(query string, k int) ([]models.Page, error){
+func RankPages(query string, k int) ([]models.SearchResult, error){
 	t1 := time.Now().UnixMilli()
 
 	// tokenize query
