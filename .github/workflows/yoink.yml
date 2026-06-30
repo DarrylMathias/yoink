@@ -31,6 +31,7 @@ jobs:
       - name: Inspect key
         run: |
           printf "%s" "$KEY" > key.pem
+          chmod 600 key.pem
           head -1 key.pem
           tail -1 key.pem
           ssh-keygen -l -f key.pem
