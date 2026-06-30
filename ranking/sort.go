@@ -1,6 +1,7 @@
 package ranking
 
 import (
+	"slices"
 	"sort"
 	"yoink/models"
 	"yoink/ranking/database"
@@ -29,24 +30,49 @@ func Sort(bm25Map *map[uuid.UUID]float64, k int) ([]models.Data, error) {
 		k = len(ids)
 	}
 
-	docMapPtr, err := database.GetDocumentBatch(ids[:k])
-	if err != nil{
-		return nil, err
-	}
-	docMap := *docMapPtr
-
-	// construct result array using docMap
+	// construct unique docSlice
 	var result []models.Data
-	for _, id := range ids[:k]{
-		res := models.Data{
-			Url: docMap[id].Url,
-			Title: docMap[id].Title,
-			Description: docMap[id].Description,
-			Crawl_time: docMap[id].Crawl_time,
-			Document_length: docMap[id].Document_length,
-			BM25_Rating: (*bm25Map)[id],
+	var uniqueHashes []string
+	
+	// Fetch documents to check for uniqueness
+	for i := 0; i < len(ids) && len(result) < k; {
+		end := i + k
+		if end > len(ids) {
+			end = len(ids)
 		}
-		result = append(result, res)
+		
+		batchIds := ids[i:end]
+		docBatchPtr, err := database.GetDocumentBatch(batchIds)
+		if err != nil {
+			return nil, err
+		}
+		docBatch := *docBatchPtr
+		
+		for _, id := range batchIds {
+			doc, exists := docBatch[id]
+			if !exists {
+				continue
+			}
+			hash := doc.Url_hash
+			if !slices.Contains(uniqueHashes, hash) {
+				uniqueHashes = append(uniqueHashes, hash)
+				
+				res := models.Data{
+					Url:             doc.Url,
+					Title:           doc.Title,
+					Description:     doc.Description,
+					Crawl_time:      doc.Crawl_time,
+					Document_length: doc.Document_length,
+					BM25_Rating:     (*bm25Map)[id],
+				}
+				result = append(result, res)
+				
+				if len(result) == k {
+					break
+				}
+			}
+		}
+		i = end
 	}
 
 	return result, nil
