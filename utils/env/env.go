@@ -34,6 +34,7 @@ type Env struct{
 type Config struct{
 	Application string `mapstructure:"APPLICATION"`
 	ApplicationPort string `mapstructure:"APPLICATION_PORT"`
+	FrontEndURL string `mapstructure:"FRONT_END_URL"`
 	Workers string `mapstructure:"WORKERS"`
 	NoOfSQSMessages string `mapstructure:"NO_OF_SQS_MESSAGES"`
 	PostingThreshold string `mapstructure:"POSTING_THRESHOLD"`

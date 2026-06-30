@@ -41,5 +41,10 @@ func NewDatabase(){
 	}
 	database.AutoMigrate(&models.Page{})
 	database.AutoMigrate(&models.CorpusStatistics{})
+
+	sqlDB, err := database.DB()
+	sqlDB.SetMaxOpenConns(50)
+	sqlDB.SetMaxIdleConns(10)
+
 	DB = database
 }
