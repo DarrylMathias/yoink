@@ -15,7 +15,7 @@ func Ranking(c *echo.Context) error{
 	if q == ""{
 		return utils.NewApiError(c, http.StatusBadRequest, fmt.Sprintln("q is required"))
 	}
-	if len(q) > 20{
+	if len(q) > 100{
 		return utils.NewApiError(c, http.StatusBadRequest, fmt.Sprintln("q is too long"))
 	}
 
