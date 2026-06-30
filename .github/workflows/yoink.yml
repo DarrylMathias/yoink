@@ -28,22 +28,6 @@ jobs:
     needs: ci
     runs-on: ubuntu-latest
     steps:
-      - name: Inspect key
-        run: |
-          printf "%s" "$KEY" > key.pem
-          chmod 600 key.pem
-          head -1 key.pem
-          tail -1 key.pem
-          ssh-keygen -l -f key.pem
-        env:
-          KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Hash secret
-        run: |
-          printf "%s" "$KEY" > key.pem
-          sha256sum key.pem
-        env:
-          KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1
         with:
