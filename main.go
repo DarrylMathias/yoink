@@ -23,7 +23,7 @@ func main() {
 
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
-	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(1)))
+	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(3)))
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: []string{env.ConfigValue.FrontEndURLProd, env.ConfigValue.FrontEndURLDev},
 		AllowMethods: []string{http.MethodGet},
